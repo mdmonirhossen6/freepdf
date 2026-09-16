@@ -1,0 +1,5 @@
+# Free Pdf — HSC, admission, medical, engineering and BCS resource search
+User-agent: *
+Allow: /
+
+Sitemap: https://hscfreepdf.vercel.app/sitemap.xml

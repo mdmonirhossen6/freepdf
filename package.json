@@ -1,0 +1,33 @@
+{
+  "name": "hscfreepdf",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Free Pdf — static, serverless searchable HSC & admission resource library for the Telegram channel @hscfreepdf.",
+  "scripts": {
+    "data": "node scripts/generate-data.ts",
+    "dev": "npm run data && next dev",
+    "build": "next build",
+    "prebuild": "npm run data",
+    "typecheck": "tsc --noEmit",
+    "preview": "npx --yes serve out -l 4321"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "next": "^15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.6",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
