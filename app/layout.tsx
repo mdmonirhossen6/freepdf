@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import SiteHeader from '@/components/SiteHeader';
 
 export const metadata: Metadata = {
   title: {
@@ -49,7 +50,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
-      <body className="min-h-screen bg-[var(--c-bg)] text-[var(--c-fg)] antialiased">{children}</body>
+      <body className="min-h-screen bg-[var(--c-bg)] text-[var(--c-fg)] antialiased">
+        <SiteHeader />
+        {children}
+      </body>
     </html>
   );
 }
