@@ -37,7 +37,7 @@ export default function ResourceCard({ resource, category }: { resource: Resourc
 
   return (
     <>
-      <article className="rounded-lg border border-[var(--c-line-strong)] bg-[var(--c-panel)] p-4 transition hover:border-[var(--c-fg-muted)] dark:border-[var(--c-line)]">
+      <article className="rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-card transition hover:-translate-y-0.5 hover:border-[var(--c-accent)] hover:shadow-pop dark:border-[var(--c-line)]">
         <div className="flex items-start gap-3">
           <span className={`mt-0.5 inline-flex shrink-0 items-center rounded border px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${badge}`}>
             {resource.typeLabel}
@@ -91,13 +91,14 @@ function ResourceModal({ resource, onClose }: { resource: Resource; onClose: () 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label={resource.title}
     >
       <button type="button" className="absolute inset-0 cursor-default" onClick={onClose} aria-label="Close dialog" tabIndex={-1} />
-      <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-t-xl border border-[var(--c-line-strong)] bg-[var(--c-panel)] p-5 shadow-xl sm:rounded-xl sm:p-6">
+      <div className="glass-panel relative w-full max-w-2xl overflow-hidden rounded-t-xl sm:rounded-xl">
+        <div className="max-h-[90vh] overflow-y-auto p-5 sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${TYPE_STYLES[resource.type] ?? TYPE_STYLES.Other}`}>
             {resource.typeLabel}
@@ -165,6 +166,7 @@ function ResourceModal({ resource, onClose }: { resource: Resource; onClose: () 
             </ul>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

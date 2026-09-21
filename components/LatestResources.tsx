@@ -21,7 +21,10 @@ export default function LatestResources({ resources, latestDate, total }: Latest
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-[var(--c-fg-subtle)]">Recently added</p>
+            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--c-fg-muted)]">
+              <span aria-hidden="true" className="inline-block h-[3px] w-5 rounded-full bg-[var(--c-accent)]" />
+              Recently added
+            </p>
             <h2 id="latest-heading" className="mt-1 text-xl font-semibold text-[var(--c-fg)]">
               Newest resources
             </h2>
@@ -33,7 +36,7 @@ export default function LatestResources({ resources, latestDate, total }: Latest
         </div>
         <ul className="flex flex-col gap-3">
           {resources.map((resource) => (
-            <li key={resource.id}>
+            <li key={resource.id} data-reveal>
               <ResourceCard resource={resource} />
             </li>
           ))}

@@ -6,21 +6,22 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: 'rgb(var(--c-bg) / <alpha-value>)',
-        'bg-subtle': 'rgb(var(--c-bg-subtle) / <alpha-value>)',
-        panel: 'rgb(var(--c-panel) / <alpha-value>)',
-        fg: 'rgb(var(--c-fg) / <alpha-value>)',
-        'fg-muted': 'rgb(var(--c-fg-muted) / <alpha-value>)',
-        'fg-subtle': 'rgb(var(--c-fg-subtle) / <alpha-value>)',
-        line: 'rgb(var(--c-line) / <alpha-value>)',
-        'line-strong': 'rgb(var(--c-line-strong) / <alpha-value>)',
-        accent: 'rgb(var(--c-accent) / <alpha-value>)',
-        'accent-fg': 'rgb(var(--c-accent-fg) / <alpha-value>)',
-        'accent-soft': 'rgb(var(--c-accent-soft) / <alpha-value>)',
+        bg: 'var(--c-bg)',
+        'bg-subtle': 'var(--c-bg-subtle)',
+        panel: 'var(--c-panel)',
+        fg: 'var(--c-fg)',
+        'fg-muted': 'var(--c-fg-muted)',
+        'fg-subtle': 'var(--c-fg-subtle)',
+        line: 'var(--c-line)',
+        'line-strong': 'var(--c-line-strong)',
+        accent: 'var(--c-accent)',
+        'accent-fg': 'var(--c-accent-fg)',
+        'accent-soft': 'var(--c-accent-soft)',
       },
       fontFamily: {
         sans: ['var(--font-ui)'],
         bn: ['var(--font-bn)'],
+        display: ['var(--font-display)'],
       },
       maxWidth: {
         '8xl': '88rem',

@@ -7,7 +7,6 @@ import { usePathname } from 'next/navigation';
 const NAV = [
   { href: '/search', label: 'Search' },
   { href: '/category', label: 'Categories' },
-  { href: '/browse', label: 'Latest' },
   { href: '/browse', label: 'Browse' },
 ];
 
@@ -55,10 +54,14 @@ export default function SiteHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--c-line)] bg-[var(--c-bg)]/95 backdrop-blur-sm">
+    <header className="glass-chrome sticky top-0 z-40 border-b border-[var(--c-line)]">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2 text-base font-semibold tracking-tight text-[var(--c-fg)]">
-          <span className="inline-block h-2.5 w-2.5 rounded-sm bg-[var(--c-accent)]" aria-hidden="true" />
+        <Link href="/" className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-[var(--c-fg)] font-display">
+          <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0" aria-hidden="true">
+            <rect width="24" height="24" rx="6" fill="var(--c-accent)" />
+            <path d="M8 5h8a1 1 0 0 1 1 1v13.6l-5-3-5 3V6a1 1 0 0 1 1-1Z" fill="rgb(250 246 239 / 0.96)" />
+            <path d="M10 9.5h4v1.2h-4zM10 12.5h4v1.2h-4z" fill="var(--c-accent)" />
+          </svg>
           Free Pdf
         </Link>
 

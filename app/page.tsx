@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import Provider from '@/components/Provider';
 import HomeSearch from '@/components/HomeSearch';
+import Marquee from '@/components/Marquee';
+import Bento from '@/components/Bento';
+import StatementReveal from '@/components/motion/StatementReveal';
+import ScrollReveal from '@/components/motion/ScrollReveal';
 import LatestResources from '@/components/LatestResources';
-import CategoryGrid from '@/components/CategoryGrid';
+import CtaBand from '@/components/CtaBand';
 import Footer from '@/components/Footer';
 import { RESOURCES, TOTAL_RESOURCES, LATEST_RESOURCE_DATE } from '@/lib/generated/resources';
 import { CATEGORY_META } from '@/lib/categories';
@@ -54,31 +57,26 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <HomeSearch total={TOTAL_RESOURCES} />
+      <div className="w-full max-w-full overflow-x-hidden">
+        <HomeSearch total={TOTAL_RESOURCES} />
 
-      <section className="border-b border-[var(--c-line)] py-8">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-[var(--c-fg-subtle)]">
-            Quick categories
-          </p>
-          <ul className="flex flex-wrap gap-2">
-            {CATEGORY_META.map((category) => (
-              <li key={category.slug}>
-                <Link
-                  href={`/category/${category.slug}`}
-                  className="inline-flex rounded-full border border-[var(--c-line-strong)] px-3 py-1.5 text-sm text-[var(--c-fg-muted)] transition hover:border-[var(--c-accent)] hover:text-[var(--c-accent)]"
-                >
-                  {category.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+        <Marquee />
 
-      <LatestResources resources={RESOURCES.slice(0, 12)} latestDate={LATEST_RESOURCE_DATE} total={TOTAL_RESOURCES} />
-      <CategoryGrid categories={CATEGORY_META} total={TOTAL_RESOURCES} />
-      <Footer />
+        <Bento categories={CATEGORY_META} total={TOTAL_RESOURCES} />
+
+        <section className="pb-24 sm:pb-32" aria-label="About the index">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <StatementReveal text="One channel. One index. Every book, test paper and digest — searchable in seconds, free forever." />
+          </div>
+        </section>
+
+        <ScrollReveal>
+          <LatestResources resources={RESOURCES.slice(0, 12)} latestDate={LATEST_RESOURCE_DATE} total={TOTAL_RESOURCES} />
+        </ScrollReveal>
+
+        <CtaBand />
+        <Footer />
+      </div>
     </Provider>
   );
 }

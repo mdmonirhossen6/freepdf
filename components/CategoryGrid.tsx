@@ -19,7 +19,10 @@ export default function CategoryGrid({ categories, total }: CategoryGridProps) {
     <section className="border-t border-[var(--c-line)] py-12 sm:py-16" aria-labelledby="categories-heading">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
-          <p className="text-xs font-medium uppercase tracking-wide text-[var(--c-fg-subtle)]">Browse by category</p>
+          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--c-fg-muted)]">
+            <span aria-hidden="true" className="inline-block h-[3px] w-5 rounded-full bg-[var(--c-accent)]" />
+            Browse by category
+          </p>
           <h2 id="categories-heading" className="mt-1 text-xl font-semibold text-[var(--c-fg)]">
             Popular categories
           </h2>
@@ -32,7 +35,7 @@ export default function CategoryGrid({ categories, total }: CategoryGridProps) {
             <li key={category.slug}>
               <Link
                 href={`/category/${category.slug}`}
-                className="group flex h-full flex-col rounded-lg border border-[var(--c-line-strong)] bg-[var(--c-panel)] p-5 transition hover:border-[var(--c-accent)]"
+                className="group flex h-full flex-col rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] p-5 shadow-card transition hover:-translate-y-0.5 hover:border-[var(--c-accent)] hover:shadow-pop"
               >
                 <span className="text-base font-semibold text-[var(--c-fg)] group-hover:text-[var(--c-accent)]">
                   {category.name}

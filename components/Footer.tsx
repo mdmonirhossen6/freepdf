@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="mx-auto max-w-6xl px-5 pb-10 pt-12 text-sm text-[var(--c-fg-muted)] sm:px-8 lg:px-12">
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="space-y-3 text-[var(--c-fg-muted)]">
-            <p className="text-base text-[var(--c-fg)] font-medium">Free Pdf</p>
+            <p className="font-display text-lg font-semibold text-[var(--c-fg)]">Free Pdf</p>
             <p className="max-w-md text-[var(--c-fg-muted)]">
               A static, searchable index of study resources from the{' '}
               <a

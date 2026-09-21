@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRecentSearches } from '@/components/RecentSearches';
 
@@ -45,14 +46,27 @@ export default function HomeSearch({ total }: { total: number }) {
   );
 
   return (
-    <section className="border-b border-[var(--c-line)] bg-[var(--c-bg)] px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-      <div className="mx-auto max-w-2xl text-center">
-        <h1 className="text-3xl font-semibold tracking-tight text-[var(--c-fg)] sm:text-4xl lg:text-5xl">
-          Free Pdf
+    <section className="relative overflow-hidden border-b border-[var(--c-line)] px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(55% 65% at 28% 8%, var(--c-accent-soft) 0%, transparent 58%), radial-gradient(45% 55% at 78% 12%, rgb(224 168 70 / 0.16) 0%, transparent 60%), radial-gradient(70% 90% at 50% 0%, var(--c-accent-soft) 0%, transparent 64%)',
+        }}
+      />
+      <div className="relative mx-auto max-w-3xl text-center">
+        <p className="mb-5 inline-flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--c-fg-muted)]">
+          <span aria-hidden="true" className="inline-block h-[3px] w-5 rounded-full bg-[var(--c-accent)]" />
+          The @hscfreepdf index
+          <span aria-hidden="true" className="inline-block h-[3px] w-5 rounded-full bg-[var(--c-accent)]" />
+        </p>
+        <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight text-[var(--c-fg)] sm:text-5xl lg:text-[3.4rem]">
+          Every PDF, <em className="italic text-[var(--c-accent)]">one search</em> away.
         </h1>
-        <p className="mt-2 text-base font-medium text-[var(--c-fg)] sm:text-lg">Find the PDF you need.</p>
-        <p className="mt-1 text-[var(--c-fg-muted)] sm:text-base">
-          Search HSC, University Admission, Medical, Engineering, BCS and other study resources.
+        <p className="mx-auto mt-4 max-w-xl text-[var(--c-fg-muted)] sm:text-lg">
+          HSC, university admission, medical, engineering, BCS and more —{' '}
+          {total.toLocaleString('en-US')} resources from the Telegram channel. No sign-up. Always free.
         </p>
 
         <form
@@ -60,7 +74,8 @@ export default function HomeSearch({ total }: { total: number }) {
           className="mt-8 flex w-full flex-col items-center sm:mt-10 sm:flex-row sm:justify-center"
         >
           <div className="relative w-full max-w-xl">
-            <div className="group relative flex items-center border border-[var(--c-line-strong)] bg-[var(--c-panel)] px-4 shadow-sm transition-shadow hover:border-[var(--c-fg-muted)] focus-within:border-[var(--c-accent)] focus-within:shadow-md dark:border-[var(--c-line)] sm:py-3">
+            <div className="glass-panel glass-enter group relative flex items-center overflow-hidden rounded-xl px-4 sm:px-5 sm:py-3.5">
+              <span className="glass-sheen" aria-hidden="true" />
               <svg
                 className="mr-3 h-5 w-5 shrink-0 text-[var(--c-fg-muted)]"
                 viewBox="0 0 24 24"
@@ -92,7 +107,7 @@ export default function HomeSearch({ total }: { total: number }) {
               </button>
             </div>
             {recent.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-[var(--c-line-strong)] bg-[var(--c-panel)] shadow-lg dark:border-[var(--c-line)] sm:relative sm:mt-2 sm:box-shadow-none sm:border sm:bg-transparent sm:shadow-none">
+              <div className="glass-panel glass-enter absolute z-10 mt-1 w-full overflow-hidden rounded-lg sm:relative sm:mt-2">
                 <div className="flex items-center justify-between border-b border-[var(--c-line-strong)] px-4 py-2 dark:border-[var(--c-line)]">
                   <span className="text-xs font-medium uppercase tracking-wide text-[var(--c-fg-muted)]">Recent</span>
                   <button
@@ -128,8 +143,14 @@ export default function HomeSearch({ total }: { total: number }) {
           </div>
         </form>
 
-        <p className="mt-6 text-xs text-[var(--c-fg-subtle)]">
-          {total.toLocaleString('en-US')} resources indexed · {new Date().getFullYear()}
+        <p className="mt-5 text-sm text-[var(--c-fg-subtle)]">
+          or{' '}
+          <Link
+            href="/browse"
+            className="font-medium text-[var(--c-accent)] underline-offset-4 hover:underline"
+          >
+            browse the full index
+          </Link>
         </p>
       </div>
     </section>
