@@ -8,6 +8,7 @@ import CategoryHeader from '@/components/CategoryHeader';
 import RecentSearches from '@/components/RecentSearches';
 import EmptyState from '@/components/EmptyState';
 import Footer from '@/components/Footer';
+import { CountLine, CategoryNotFound } from '@/components/i18n-text';
 
 export async function generateStaticParams() {
   return CATEGORY_META.map((m) => ({ slug: m.slug }));
@@ -37,13 +38,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const meta = categoryBySlug(slug);
-  if (!meta) return <NotFound />;
+  if (!meta) return <CategoryNotFound />;
   const category = meta.name;
 
   const results = searchAll(RESOURCES, { query: '', typeFilter: 'ALL', categoryFilter: category, sort: 'newest', limit: 400 });
   const count = results.total;
 
-  const displayTitle = meta.name;
   const displayCategory = meta.name;
 
   return (
@@ -53,12 +53,9 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
       {results.results.length === 0 ? (
         <EmptyState query="" total={TOTAL_RESOURCES} />
       ) : (
-        <section className="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 lg:px-8" aria-label={`${displayCategory} resources`}>
+        <section className="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 lg:px-8" aria-label={`${displayCategory}`}>
           <div className="mb-6 flex items-baseline gap-3">
-            <p className="text-sm tabular-nums text-[var(--c-fg-subtle)]">
-              <span className="font-medium text-[var(--c-fg)]">{count.toLocaleString('en-US')}</span>{' '}
-              {displayTitle} resources
-            </p>
+            <CountLine count={count} name={displayCategory} />
           </div>
           <ul className="flex flex-col gap-3">
             {results.results.map((resource) => (
@@ -70,23 +67,6 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
         </section>
       )}
       <Footer />
-    </Provider>
-  );
-}
-
-async function NotFound() {
-  return (
-    <Provider>
-      <main className="mx-auto max-w-3xl px-4 py-24 text-center sm:px-6 lg:px-8">
-        <h1 className="text-2xl font-medium tracking-tight text-fg">Page not found</h1>
-        <p className="mt-4 text-fg-muted">This category isn't available right now.</p>
-        <a href="/" className="mt-6 inline-flex items-center gap-2 rounded btn-primary">
-          Back to home
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-          </svg>
-        </a>
-      </main>
     </Provider>
   );
 }

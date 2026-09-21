@@ -1,6 +1,7 @@
 'use client';
 
 import type { SortKey } from '@/lib/types';
+import { useLang } from '@/lib/i18n';
 
 interface SortBarProps {
   activeSort: SortKey;
@@ -14,9 +15,11 @@ const OPTIONS: { value: SortKey; label: string }[] = [
 ];
 
 export default function SortBar({ activeSort, onSortChange }: SortBarProps) {
+  const { t } = useLang();
+
   return (
-    <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Sort results">
-      <span className="mr-1 text-xs font-medium text-[var(--c-fg-muted)]">Sort</span>
+    <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t.sort.label}>
+      <span className="mr-1 text-xs font-medium text-[var(--c-fg-muted)]">{t.sort.label}</span>
       {OPTIONS.map((option) => {
         const active = activeSort === option.value;
         return (
@@ -31,7 +34,7 @@ export default function SortBar({ activeSort, onSortChange }: SortBarProps) {
                 : 'border-[var(--c-line-strong)] text-[var(--c-fg-muted)] hover:border-[var(--c-fg-muted)] hover:text-[var(--c-fg)]'
             }`}
           >
-            {option.label}
+            {t.sort[option.value]}
           </button>
         );
       })}

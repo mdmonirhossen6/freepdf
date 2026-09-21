@@ -66,7 +66,7 @@ export default function HomePage() {
 
         <section className="pb-24 sm:pb-32" aria-label="About the index">
           <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-            <StatementReveal text="One channel. One index. Every book, test paper and digest — searchable in seconds, free forever." />
+            <StatementReveal />
           </div>
         </section>
 

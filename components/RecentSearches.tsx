@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useLang } from '@/lib/i18n';
 
 const STORAGE_KEY = 'hscfreepdf_recent_searches';
 const MAX = 6;
@@ -48,6 +49,7 @@ export function useRecentSearches() {
 }
 
 export default function RecentSearches() {
+  const { t } = useLang();
   const { recent, add, clear } = useRecentSearches();
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -76,7 +78,7 @@ export default function RecentSearches() {
             <circle cx="12" cy="12" r="10" />
             <polyline points="12 6 12 12 16 14" />
           </svg>
-          <span className="font-medium">Recent searches</span>
+          <span className="font-medium">{t.recent.recentTitle}</span>
         </span>
         <svg className={`h-4 w-4 shrink-0 text-[var(--c-fg-muted)] transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <polyline points="6 9 12 15 18 9" />
@@ -84,11 +86,11 @@ export default function RecentSearches() {
       </button>
 
       {open && (
-        <div className="mt-1 overflow-hidden rounded-lg border border-[var(--c-line-strong)] bg-[var(--c-panel)] dark:border-[var(--c-line)]">
+        <div className="glass-panel mt-1 overflow-hidden rounded-lg">
           <div className="flex items-center justify-between border-b border-[var(--c-line)] px-4 py-2">
-            <span className="text-xs font-medium uppercase tracking-wide text-[var(--c-fg-subtle)]">Recent</span>
+            <span className="text-xs font-medium uppercase tracking-wide text-[var(--c-fg-subtle)]">{t.recent.recentTitle}</span>
             <button type="button" onClick={clear} className="text-xs text-[var(--c-accent)] hover:underline">
-              Clear
+              {t.recent.clear}
             </button>
           </div>
           <ul className="py-1">

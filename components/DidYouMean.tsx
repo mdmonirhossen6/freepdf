@@ -1,5 +1,7 @@
 'use client';
 
+import { useLang } from '@/lib/i18n';
+
 interface DidYouMeanProps {
   suggestion: string;
   query: string;
@@ -7,6 +9,7 @@ interface DidYouMeanProps {
 }
 
 export default function DidYouMean({ suggestion, query, onSelect }: DidYouMeanProps) {
+  const { t } = useLang();
   if (!suggestion) return null;
   const text = suggestion.replace(/^Did you mean:\s*/, '');
 
@@ -25,7 +28,7 @@ export default function DidYouMean({ suggestion, query, onSelect }: DidYouMeanPr
         <path d="M12 3a6 6 0 0 0-6 6c0 3 2 4 2 7a4 4 0 0 0 8 0c0-3 2-4 2-7a6 6 0 0 0-6-6Z" />
         <path d="M12 17h.01" />
       </svg>
-      <span className="text-[var(--c-fg-muted)]">Did you mean:</span>
+      <span className="text-[var(--c-fg-muted)]">{t.dym}</span>
       <button
         type="button"
         onClick={() => onSelect(text)}

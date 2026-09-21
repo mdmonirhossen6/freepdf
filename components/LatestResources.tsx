@@ -1,6 +1,9 @@
+'use client';
+
 import Link from 'next/link';
 import type { Resource } from '@/lib/types';
-import ResourceCard from './ResourceCard';
+import ResourceCard, { formatDate } from './ResourceCard';
+import { useLang, fill } from '@/lib/i18n';
 
 interface LatestResourcesProps {
   resources: Resource[];
@@ -8,14 +11,9 @@ interface LatestResourcesProps {
   total: number;
 }
 
-function formatDate(iso: string): string {
-  const parts = iso.split('-').map(Number);
-  if (parts.length !== 3 || parts.some(Number.isNaN)) return iso;
-  const d = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
-  return d.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-}
-
 export default function LatestResources({ resources, latestDate, total }: LatestResourcesProps) {
+  const { t, fmt, locale } = useLang();
+
   return (
     <section className="border-t border-[var(--c-line)] py-12 sm:py-16" aria-labelledby="latest-heading">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -23,15 +21,15 @@ export default function LatestResources({ resources, latestDate, total }: Latest
           <div>
             <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--c-fg-muted)]">
               <span aria-hidden="true" className="inline-block h-[3px] w-5 rounded-full bg-[var(--c-accent)]" />
-              Recently added
+              {t.latest.eyebrow}
             </p>
             <h2 id="latest-heading" className="mt-1 text-xl font-semibold text-[var(--c-fg)]">
-              Newest resources
+              {t.latest.heading}
             </h2>
-            <p className="mt-1 text-sm text-[var(--c-fg-muted)]">Latest upload: {formatDate(latestDate)}</p>
+            <p className="mt-1 text-sm text-[var(--c-fg-muted)]">{fill(t.latest.uploaded, { date: formatDate(latestDate, locale) })}</p>
           </div>
           <Link href="/browse" className="text-sm font-medium text-[var(--c-accent)] hover:underline">
-            View all {total.toLocaleString('en-US')} resources →
+            {fill(t.latest.viewAll, { count: fmt(total) })} →
           </Link>
         </div>
         <ul className="flex flex-col gap-3">

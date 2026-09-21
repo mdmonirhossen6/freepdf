@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
+import { useLang } from '@/lib/i18n';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -12,8 +13,10 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
  * full opacity, driven directly by scroll position (scrub: true).
  * Bangla word-shaping stays intact because each word is a single span.
  */
-export default function StatementReveal({ text }: { text: string }) {
+export default function StatementReveal() {
   const ref = useRef<HTMLParagraphElement>(null);
+  const { t } = useLang();
+  const text = t.statement;
 
   useGSAP(
     () => {
@@ -32,7 +35,7 @@ export default function StatementReveal({ text }: { text: string }) {
         },
       );
     },
-    { scope: ref },
+    { scope: ref, dependencies: [text] },
   );
 
   return (

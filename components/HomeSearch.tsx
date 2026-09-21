@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRecentSearches } from '@/components/RecentSearches';
+import { useLang, fill } from '@/lib/i18n';
 
 const PLACEHOLDERS = [
   'Search for a book, subject, author or topic...',
@@ -18,6 +19,7 @@ const PLACEHOLDERS = [
 
 export default function HomeSearch({ total }: { total: number }) {
   const router = useRouter();
+  const { t, fmt } = useLang();
   const [value, setValue] = useState('');
   const [pointer, setPointer] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -58,15 +60,14 @@ export default function HomeSearch({ total }: { total: number }) {
       <div className="relative mx-auto max-w-3xl text-center">
         <p className="mb-5 inline-flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--c-fg-muted)]">
           <span aria-hidden="true" className="inline-block h-[3px] w-5 rounded-full bg-[var(--c-accent)]" />
-          The @hscfreepdf index
+          {t.hero.eyebrow}
           <span aria-hidden="true" className="inline-block h-[3px] w-5 rounded-full bg-[var(--c-accent)]" />
         </p>
         <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight text-[var(--c-fg)] sm:text-5xl lg:text-[3.4rem]">
-          Every PDF, <em className="italic text-[var(--c-accent)]">one search</em> away.
+          {t.hero.titleA} <em className="italic text-[var(--c-accent)]">{t.hero.titleAccent}</em> {t.hero.titleB}
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-[var(--c-fg-muted)] sm:text-lg">
-          HSC, university admission, medical, engineering, BCS and more —{' '}
-          {total.toLocaleString('en-US')} resources from the Telegram channel. No sign-up. Always free.
+          {fill(t.hero.subtitle, { count: fmt(total) })}
         </p>
 
         <form
@@ -103,19 +104,19 @@ export default function HomeSearch({ total }: { total: number }) {
                 type="submit"
                 className="rounded-full bg-[var(--c-accent)] px-4 py-1.5 text-sm font-medium text-[var(--c-accent-fg)] hover:brightness(1.05) transition sm:px-5 sm:py-2"
               >
-                Search
+                {t.hero.searchBtn}
               </button>
             </div>
             {recent.length > 0 && (
               <div className="glass-panel glass-enter absolute z-10 mt-1 w-full overflow-hidden rounded-lg sm:relative sm:mt-2">
                 <div className="flex items-center justify-between border-b border-[var(--c-line-strong)] px-4 py-2 dark:border-[var(--c-line)]">
-                  <span className="text-xs font-medium uppercase tracking-wide text-[var(--c-fg-muted)]">Recent</span>
+                  <span className="text-xs font-medium uppercase tracking-wide text-[var(--c-fg-muted)]">{t.recent.title}</span>
                   <button
                     type="button"
                     onClick={() => router.push('/search')}
                     className="text-xs text-[var(--c-accent)] hover:underline"
                   >
-                    View all
+                    {t.recent.viewAll}
                   </button>
                 </div>
                 <ul className="py-1" role="list">
@@ -149,7 +150,7 @@ export default function HomeSearch({ total }: { total: number }) {
             href="/browse"
             className="font-medium text-[var(--c-accent)] underline-offset-4 hover:underline"
           >
-            browse the full index
+            {t.hero.browse}
           </Link>
         </p>
       </div>

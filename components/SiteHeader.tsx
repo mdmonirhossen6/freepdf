@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useLang } from '@/lib/i18n';
 
 const NAV = [
   { href: '/search', label: 'Search' },
@@ -12,6 +13,7 @@ const NAV = [
 
 function ThemeToggle() {
   const [dark, setDark] = useState<boolean | null>(null);
+  const { t } = useLang();
 
   useEffect(() => {
     setDark(document.documentElement.getAttribute('data-theme') === 'dark');
@@ -33,7 +35,7 @@ function ThemeToggle() {
       type="button"
       onClick={toggle}
       className="rounded-full border border-[var(--c-line-strong)] p-2 text-[var(--c-fg-muted)] transition hover:border-[var(--c-fg-muted)] hover:text-[var(--c-fg)]"
-      aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
+      aria-label={dark ? t.a11y.toDark : t.a11y.toLight}
     >
       {dark ? (
         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -50,8 +52,37 @@ function ThemeToggle() {
   );
 }
 
+function LangToggle() {
+  const { lang, setLang, t } = useLang();
+
+  return (
+    <div
+      className="flex items-center rounded-full border border-[var(--c-line-strong)] p-0.5 text-[11px] font-semibold"
+      role="group"
+      aria-label={t.a11y.lang}
+    >
+      {(['en', 'bn'] as const).map((code) => (
+        <button
+          key={code}
+          type="button"
+          onClick={() => setLang(code)}
+          aria-pressed={lang === code}
+          className={`rounded-full px-2.5 py-1 transition ${
+            lang === code
+              ? 'bg-[var(--c-accent)] text-[var(--c-accent-fg)]'
+              : 'text-[var(--c-fg-muted)] hover:text-[var(--c-fg)]'
+          }`}
+        >
+          {code === 'en' ? 'EN' : 'বাং'}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function SiteHeader() {
   const pathname = usePathname();
+  const { t } = useLang();
 
   return (
     <header className="glass-chrome sticky top-0 z-40 border-b border-[var(--c-line)]">
@@ -68,6 +99,7 @@ export default function SiteHeader() {
         <nav aria-label="Main" className="hidden items-center gap-6 sm:flex">
           {NAV.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const label = t.nav[item.label.toLowerCase() as 'search' | 'categories' | 'browse'];
             return (
               <Link
                 key={item.label}
@@ -78,20 +110,21 @@ export default function SiteHeader() {
                     : 'text-[var(--c-fg-muted)] hover:text-[var(--c-fg)]'
                 }`}
               >
-                {item.label}
+                {label}
               </Link>
             );
           })}
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link href="/search" className="btn-ghost px-3 py-1.5 text-xs sm:hidden" aria-label="Open search">
+          <Link href="/search" className="btn-ghost px-3 py-1.5 text-xs sm:hidden" aria-label={t.a11y.openSearch}>
             <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.3-4.3" />
             </svg>
-            Search
+            {t.nav.search}
           </Link>
+          <LangToggle />
           <ThemeToggle />
         </div>
       </div>

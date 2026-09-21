@@ -1,7 +1,10 @@
+'use client';
+
 import Link from 'next/link';
 import { BookOpen, GraduationCap, Stethoscope, Cog, Briefcase, Newspaper, Library, Layers } from 'lucide-react';
 import type { CategoryMeta } from '@/lib/categories';
 import { RESOURCES } from '@/lib/generated/resources';
+import { useLang, fill } from '@/lib/i18n';
 
 interface BentoProps {
   categories: CategoryMeta[];
@@ -19,6 +22,9 @@ const ICONS: Record<string, typeof BookOpen> = {
 };
 
 export default function Bento({ categories, total }: BentoProps) {
+  const { t, fmt } = useLang();
+  const cats = t.cats as Record<string, { name: string; blurb: string }>;
+
   const counts = new Map<string, number>();
   for (const resource of RESOURCES) {
     for (const category of resource.categories) {
@@ -26,7 +32,6 @@ export default function Bento({ categories, total }: BentoProps) {
     }
   }
 
-  const byName = new Map(categories.map((category) => [category.name, category]));
   const span: Record<string, string> = {
     HSC: 'col-span-2 row-span-2',
     'University Admission': 'col-span-2',
@@ -39,29 +44,23 @@ export default function Bento({ categories, total }: BentoProps) {
           <div>
             <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--c-fg-muted)]">
               <span aria-hidden="true" className="inline-block h-[3px] w-5 rounded-full bg-[var(--c-accent)]" />
-              The full index
+              {t.bento.eyebrow}
             </p>
             <h2 id="bento-heading" className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-              Seven tracks. One shelf.
+              {t.bento.heading}
             </h2>
           </div>
-          <Link
-            href="/category/"
-            className="btn-ghost hidden text-sm sm:inline-flex"
-          >
-            All categories
+          <Link href="/category/" className="btn-ghost hidden text-sm sm:inline-flex">
+            {t.bento.all}
           </Link>
         </div>
 
         <ul className="grid grid-flow-dense grid-cols-2 gap-3 md:grid-cols-4">
           {categories.map((category) => {
             const Icon = ICONS[category.name] ?? Library;
+            const meta = cats[category.slug] ?? { name: category.name, blurb: category.blurb };
             return (
-              <li
-                key={category.slug}
-                data-reveal
-                className={span[category.name] ?? 'col-span-1'}
-              >
+              <li key={category.slug} data-reveal className={span[category.name] ?? 'col-span-1'}>
                 <Link
                   href={`/category/${category.slug}`}
                   className={`group flex h-full flex-col rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] p-5 shadow-card transition hover:-translate-y-0.5 hover:border-[var(--c-accent)] hover:shadow-pop ${
@@ -73,16 +72,16 @@ export default function Bento({ categories, total }: BentoProps) {
                   </span>
                   <span
                     className={`mt-4 font-semibold text-[var(--c-fg)] group-hover:text-[var(--c-accent)] ${
-                      category.name === 'HSC' ? 'text-2xl sm:text-3xl font-display' : 'text-base'
+                      category.name === 'HSC' ? 'font-display text-2xl sm:text-3xl' : 'text-base'
                     }`}
                   >
-                    {category.label}
+                    {meta.name}
                   </span>
                   <span className="mt-1.5 text-sm leading-relaxed text-[var(--c-fg-muted)] line-clamp-2">
-                    {category.blurb}
+                    {meta.blurb}
                   </span>
                   <span className="mt-auto pt-4 text-xs tabular-nums text-[var(--c-fg-subtle)]">
-                    {(counts.get(category.name) ?? 0).toLocaleString('en-US')} resources
+                    {fmt(counts.get(category.name) ?? 0)} {t.bento.resources}
                   </span>
                 </Link>
               </li>
@@ -93,10 +92,8 @@ export default function Bento({ categories, total }: BentoProps) {
             <div className="flex h-full flex-col justify-between rounded-lg bg-[var(--c-fg)] p-5 text-[var(--c-bg)]">
               <Layers className="h-5 w-5 text-[var(--c-bg)] opacity-60" aria-hidden="true" />
               <div className="mt-6">
-                <p className="font-display text-3xl font-semibold tabular-nums sm:text-4xl">
-                  {total.toLocaleString('en-US')}
-                </p>
-                <p className="mt-1 text-xs opacity-70">free resources. No sign-up, ever.</p>
+                <p className="font-display text-3xl font-semibold tabular-nums sm:text-4xl">{fmt(total)}</p>
+                <p className="mt-1 text-xs opacity-70">{t.bento.stat}</p>
               </div>
             </div>
           </li>
@@ -105,3 +102,4 @@ export default function Bento({ categories, total }: BentoProps) {
     </section>
   );
 }
+

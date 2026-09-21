@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { Resource } from '@/lib/types';
 import { RESOURCES } from '@/lib/generated/resources';
 import { relatedResources } from '@/lib/search';
+import { useLang } from '@/lib/i18n';
 
 const TYPE_STYLES: Record<string, string> = {
   PDF: 'border-[var(--c-accent)] bg-[var(--c-accent-soft)] text-[var(--c-accent)]',
@@ -13,16 +14,17 @@ const TYPE_STYLES: Record<string, string> = {
   Other: 'border-[var(--c-line-strong)] bg-[var(--c-bg-subtle)] text-[var(--c-fg-muted)]',
 };
 
-export function formatDate(iso: string): string {
+export function formatDate(iso: string, locale = 'en-US'): string {
   const parts = iso.split('-').map(Number);
   if (parts.length !== 3 || parts.some(Number.isNaN)) return iso;
   const d = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
-  return d.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+  return d.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 }
 
 export default function ResourceCard({ resource, category }: { resource: Resource; category?: string }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { t, locale } = useLang();
   const badge = TYPE_STYLES[resource.type] ?? TYPE_STYLES.Other;
 
   const copy = async () => {
@@ -45,7 +47,7 @@ export default function ResourceCard({ resource, category }: { resource: Resourc
           <div className="min-w-0 flex-1">
             <h3 className="text-[15px] font-medium leading-snug text-[var(--c-fg)]">
               <button type="button" onClick={() => setOpen(true)} className="text-left hover:text-[var(--c-accent)]">
-                {resource.title || `Resource ${resource.id}`}
+                {resource.title || `${t.card.generic} ${resource.id}`}
               </button>
             </h3>
 
@@ -55,7 +57,7 @@ export default function ResourceCard({ resource, category }: { resource: Resourc
 
             <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--c-fg-subtle)]">
               <time dateTime={resource.date} className="tabular-nums">
-                {formatDate(resource.date)}
+                {formatDate(resource.date, locale)}
               </time>
               <span aria-hidden="true">·</span>
               <span>{category ?? resource.category}</span>
@@ -63,9 +65,9 @@ export default function ResourceCard({ resource, category }: { resource: Resourc
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <a href={resource.telegramUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm">
-                Open on Telegram
+                {t.card.open}
               </a>
-              <button type="button" onClick={copy} className="btn-ghost btn-sm" aria-live="polite" aria-label="Copy link to Telegram post">
+              <button type="button" onClick={copy} className="btn-ghost btn-sm" aria-live="polite" aria-label={t.card.copyAria}>
                 <svg
                   className={`h-3.5 w-3.5 shrink-0 ${copied ? 'text-[var(--c-accent)]' : ''}`}
                   viewBox="0 0 24 24"
@@ -79,7 +81,7 @@ export default function ResourceCard({ resource, category }: { resource: Resourc
                   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                   <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                 </svg>
-                {copied ? 'Copied' : 'Copy link'}
+                {copied ? t.card.copied : t.card.copy}
               </button>
             </div>
           </div>
@@ -93,6 +95,7 @@ export default function ResourceCard({ resource, category }: { resource: Resourc
 
 function ResourceModal({ resource, onClose }: { resource: Resource; onClose: () => void }) {
   const related = relatedResources(resource, RESOURCES, 5).filter((r) => r.id !== resource.id);
+  const { t, locale } = useLang();
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -121,7 +124,7 @@ function ResourceModal({ resource, onClose }: { resource: Resource; onClose: () 
           <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${TYPE_STYLES[resource.type] ?? TYPE_STYLES.Other}`}>
             {resource.typeLabel}
           </span>
-          <button type="button" onClick={onClose} className="rounded p-1 text-[var(--c-fg-muted)] hover:text-[var(--c-fg)]" aria-label="Close">
+          <button type="button" onClick={onClose} className="rounded p-1 text-[var(--c-fg-muted)] hover:text-[var(--c-fg)]" aria-label={t.card.close}>
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
@@ -129,16 +132,16 @@ function ResourceModal({ resource, onClose }: { resource: Resource; onClose: () 
         </div>
 
         <h2 className="mt-3 text-lg font-semibold leading-snug text-[var(--c-fg)]">
-          {resource.title || `Resource ${resource.id}`}
+          {resource.title || `${t.card.generic} ${resource.id}`}
         </h2>
 
         <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
           <div>
-            <dt className="text-xs uppercase tracking-wide text-[var(--c-fg-subtle)]">Date</dt>
-            <dd className="mt-0.5 text-[var(--c-fg)]">{formatDate(resource.date)}</dd>
+            <dt className="text-xs uppercase tracking-wide text-[var(--c-fg-subtle)]">{t.card.date}</dt>
+            <dd className="mt-0.5 text-[var(--c-fg)]">{formatDate(resource.date, locale)}</dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-[var(--c-fg-subtle)]">Category</dt>
+            <dt className="text-xs uppercase tracking-wide text-[var(--c-fg-subtle)]">{t.card.category}</dt>
             <dd className="mt-0.5 text-[var(--c-fg)]">{resource.category}</dd>
           </div>
         </dl>
@@ -149,20 +152,20 @@ function ResourceModal({ resource, onClose }: { resource: Resource; onClose: () 
 
         <div className="mt-5 flex flex-wrap gap-2">
           <a href={resource.telegramUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm">
-            Open on Telegram
+            {t.card.open}
           </a>
           <button
             type="button"
             onClick={() => navigator.clipboard?.writeText(resource.telegramUrl)}
             className="btn-ghost btn-sm"
           >
-            Copy link
+            {t.card.copy}
           </button>
         </div>
 
         {related.length > 0 && (
           <div className="mt-6 border-t border-[var(--c-line)] pt-4">
-            <h3 className="text-sm font-medium text-[var(--c-fg)]">Related resources</h3>
+            <h3 className="text-sm font-medium text-[var(--c-fg)]">{t.card.related}</h3>
             <ul className="mt-2 flex flex-col divide-y divide-[var(--c-line)]">
               {related.map((item) => (
                 <li key={item.id}>

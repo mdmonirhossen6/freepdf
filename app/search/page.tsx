@@ -11,10 +11,12 @@ import SortBar from '@/components/SortBar';
 import DidYouMean from '@/components/DidYouMean';
 import EmptyState from '@/components/EmptyState';
 import RecentSearches, { useRecentSearches } from '@/components/RecentSearches';
+import { useLang, fill } from '@/lib/i18n';
 
 function SearchInner() {
   const router = useRouter();
   const params = useSearchParams();
+  const { t, fmt } = useLang();
   const { add } = useRecentSearches();
 
   const urlQuery = params.get('q') ?? '';
@@ -89,13 +91,11 @@ function SearchInner() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
-      <h1 className="text-2xl font-semibold text-[var(--c-fg)]">Search resources</h1>
-      <p className="mt-1 text-sm text-[var(--c-fg-muted)]">
-        {RESOURCES.length.toLocaleString('en-US')} resources indexed across HSC, admission, medical, engineering, BCS and more.
-      </p>
+      <h1 className="text-2xl font-semibold text-[var(--c-fg)]">{t.search.title}</h1>
+      <p className="mt-1 text-sm text-[var(--c-fg-muted)]">{fill(t.search.subtitle, { count: fmt(RESOURCES.length) })}</p>
 
       <form onSubmit={onSubmit} className="mt-5">
-        <div className="flex items-center border border-[var(--c-line-strong)] bg-[var(--c-panel)] px-4 focus-within:border-[var(--c-accent)]">
+        <div className="glass-panel flex items-center rounded-xl px-4">
           <svg className="mr-3 h-5 w-5 shrink-0 text-[var(--c-fg-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.3-4.3" />
@@ -105,12 +105,12 @@ function SearchInner() {
             type="search"
             value={input}
             onChange={(event) => setInput(event.target.value)}
-            placeholder="Search for a book, subject, author or topic..."
+            placeholder={t.search.query}
             className="flex-1 bg-transparent py-3 text-[var(--c-fg)] placeholder:text-[var(--c-fg-subtle)] focus:outline-none"
-            aria-label="Search query"
+            aria-label={t.search.query}
           />
           <button type="submit" className="rounded-full bg-[var(--c-accent)] px-4 py-1.5 text-sm font-medium text-[var(--c-accent-fg)]">
-            Search
+            {t.hero.searchBtn}
           </button>
         </div>
       </form>
@@ -144,12 +144,12 @@ function SearchInner() {
       </div>
 
       <div className="mt-4 flex flex-wrap items-baseline gap-2">
-        <span className="text-lg font-medium tabular-nums text-[var(--c-fg)]">{result.total.toLocaleString('en-US')}</span>
-        <span className="text-[var(--c-fg-muted)]">results</span>
+        <span className="text-lg font-medium tabular-nums text-[var(--c-fg)]">{fmt(result.total)}</span>
+        <span className="text-[var(--c-fg-muted)]">{t.search.results}</span>
         {urlQuery && <span className="text-[var(--c-fg-subtle)]">&ldquo;{urlQuery}&rdquo;</span>}
         {hasFilters && (
           <button type="button" onClick={clearAll} className="ml-auto text-sm text-[var(--c-accent)] hover:underline">
-            Clear filters
+            {t.search.clear}
           </button>
         )}
       </div>
@@ -157,7 +157,7 @@ function SearchInner() {
       {result.results.length === 0 ? (
         <EmptyState query={urlQuery} total={RESOURCES.length} />
       ) : (
-        <ul className="mt-4 flex flex-col gap-3" aria-label="Search results">
+        <ul className="mt-4 flex flex-col gap-3" aria-label={t.search.results}>
           {result.results.map((resource) => (
             <li key={resource.id}>
               <ResourceCard resource={resource} />
@@ -170,11 +170,12 @@ function SearchInner() {
 }
 
 export default function SearchPage() {
+  const { t } = useLang();
   return (
     <Suspense
       fallback={
         <div className="mx-auto max-w-6xl px-4 py-16 text-sm text-[var(--c-fg-muted)] sm:px-6 lg:px-8">
-          Loading search…
+          {t.search.loading}
         </div>
       }
     >
