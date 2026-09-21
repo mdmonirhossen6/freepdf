@@ -85,7 +85,7 @@ export default function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link href="/search" className="btn-ghost hidden px-3 py-1.5 text-xs sm:inline-flex" aria-label="Open search">
+          <Link href="/search" className="btn-ghost px-3 py-1.5 text-xs sm:hidden" aria-label="Open search">
             <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.3-4.3" />

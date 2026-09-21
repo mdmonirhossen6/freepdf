@@ -18,10 +18,11 @@
   --c-accent: #b90e1c;
   --c-accent-fg: #ffffff;
   --c-accent-soft: #f8e7e4;
-  --c-header: rgba(250, 246, 239, 0.6);
-  --glass-chrome-bg: rgba(250, 246, 239, 0.6);
+  --c-header: rgba(250, 246, 239, 0.72);
+  --glass-chrome-bg: rgba(250, 246, 239, 0.72);
   --glass-panel-bg: rgba(255, 253, 248, 0.55);
   --glass-panel-bg-hover: rgba(255, 253, 248, 0.68);
+  --glass-modal-bg: rgba(255, 253, 248, 0.94);
   --glass-edge: rgba(255, 255, 255, 0.85);
   --glass-edge-dim: rgba(26, 23, 19, 0.14);
 }
@@ -39,10 +40,11 @@
   --c-accent: #e8465a;
   --c-accent-fg: #12100e;
   --c-accent-soft: #2b1513;
-  --c-header: rgba(18, 16, 14, 0.55);
-  --glass-chrome-bg: rgba(18, 16, 14, 0.55);
-  --glass-panel-bg: rgba(23, 20, 17, 0.55);
-  --glass-panel-bg-hover: rgba(23, 20, 17, 0.66);
+  --c-header: rgba(18, 16, 14, 0.78);
+  --glass-chrome-bg: rgba(18, 16, 14, 0.78);
+  --glass-panel-bg: rgba(23, 20, 17, 0.62);
+  --glass-panel-bg-hover: rgba(23, 20, 17, 0.72);
+  --glass-modal-bg: rgba(23, 20, 17, 0.96);
   --glass-edge: rgba(243, 237, 228, 0.18);
   --glass-edge-dim: rgba(0, 0, 0, 0.4);
 }
@@ -223,6 +225,24 @@ select {
 
 .glass-panel:focus-within {
   border-color: color-mix(in srgb, var(--c-accent) 55%, transparent);
+}
+
+/* Modal tier: near-solid fill. Glass reads only where a busy backdrop exists;
+   over a dimmed page the priority is text contrast, not translucency. */
+.glass-modal,
+.glass-modal:hover,
+.glass-modal:focus-within {
+  background: var(--glass-modal-bg);
+  -webkit-backdrop-filter: blur(32px) saturate(160%);
+  backdrop-filter: blur(32px) saturate(160%);
+}
+
+/* Compact action buttons for dense list contexts. */
+.btn-sm {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.75rem;
+  border-radius: 6px;
+  gap: 0.3rem;
 }
 
 /* Masked 1px specular edge ring, lit top-left -> dim bottom-right. */

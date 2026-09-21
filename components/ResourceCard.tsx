@@ -62,11 +62,24 @@ export default function ResourceCard({ resource, category }: { resource: Resourc
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <a href={resource.telegramUrl} target="_blank" rel="noopener noreferrer" className="btn-primary text-xs">
+              <a href={resource.telegramUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm">
                 Open on Telegram
               </a>
-              <button type="button" onClick={copy} className="btn-ghost text-xs" aria-live="polite">
-                {copied ? 'Link copied' : 'Copy link'}
+              <button type="button" onClick={copy} className="btn-ghost btn-sm" aria-live="polite" aria-label="Copy link to Telegram post">
+                <svg
+                  className={`h-3.5 w-3.5 shrink-0 ${copied ? 'text-[var(--c-accent)]' : ''}`}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                </svg>
+                {copied ? 'Copied' : 'Copy link'}
               </button>
             </div>
           </div>
@@ -86,7 +99,12 @@ function ResourceModal({ resource, onClose }: { resource: Resource; onClose: () 
       if (event.key === 'Escape') onClose();
     };
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = previousOverflow;
+    };
   }, [onClose]);
 
   return (
@@ -97,7 +115,7 @@ function ResourceModal({ resource, onClose }: { resource: Resource; onClose: () 
       aria-label={resource.title}
     >
       <button type="button" className="absolute inset-0 cursor-default" onClick={onClose} aria-label="Close dialog" tabIndex={-1} />
-      <div className="glass-panel relative w-full max-w-2xl overflow-hidden rounded-t-xl sm:rounded-xl">
+      <div className="glass-modal glass-panel relative w-full max-w-2xl overflow-hidden rounded-t-xl sm:rounded-xl">
         <div className="max-h-[90vh] overflow-y-auto p-5 sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${TYPE_STYLES[resource.type] ?? TYPE_STYLES.Other}`}>
@@ -114,7 +132,7 @@ function ResourceModal({ resource, onClose }: { resource: Resource; onClose: () 
           {resource.title || `Resource ${resource.id}`}
         </h2>
 
-        <dl className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
+        <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
           <div>
             <dt className="text-xs uppercase tracking-wide text-[var(--c-fg-subtle)]">Date</dt>
             <dd className="mt-0.5 text-[var(--c-fg)]">{formatDate(resource.date)}</dd>
@@ -123,10 +141,6 @@ function ResourceModal({ resource, onClose }: { resource: Resource; onClose: () 
             <dt className="text-xs uppercase tracking-wide text-[var(--c-fg-subtle)]">Category</dt>
             <dd className="mt-0.5 text-[var(--c-fg)]">{resource.category}</dd>
           </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-[var(--c-fg-subtle)]">Type</dt>
-            <dd className="mt-0.5 text-[var(--c-fg)]">{resource.typeLabel}</dd>
-          </div>
         </dl>
 
         {resource.description && (
@@ -134,13 +148,13 @@ function ResourceModal({ resource, onClose }: { resource: Resource; onClose: () 
         )}
 
         <div className="mt-5 flex flex-wrap gap-2">
-          <a href={resource.telegramUrl} target="_blank" rel="noopener noreferrer" className="btn-primary text-sm">
+          <a href={resource.telegramUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm">
             Open on Telegram
           </a>
           <button
             type="button"
             onClick={() => navigator.clipboard?.writeText(resource.telegramUrl)}
-            className="btn-ghost text-sm"
+            className="btn-ghost btn-sm"
           >
             Copy link
           </button>
@@ -156,10 +170,12 @@ function ResourceModal({ resource, onClose }: { resource: Resource; onClose: () 
                     href={item.telegramUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between gap-3 py-2 text-sm text-[var(--c-fg-muted)] hover:text-[var(--c-accent)]"
+                    className="group/related flex items-center justify-between gap-3 rounded-md px-2 py-2.5 text-sm text-[var(--c-fg-muted)] transition hover:bg-[var(--c-bg-subtle)] hover:text-[var(--c-accent)]"
                   >
                     <span className="line-clamp-1">{item.title}</span>
-                    <span className="shrink-0 text-xs text-[var(--c-fg-subtle)]">{item.typeLabel}</span>
+                    <span className="shrink-0 rounded border border-[var(--c-line)] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[var(--c-fg-subtle)]">
+                      {item.typeLabel}
+                    </span>
                   </a>
                 </li>
               ))}
