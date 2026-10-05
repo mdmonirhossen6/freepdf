@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useLang } from '@/lib/i18n';
+import { CaretDown, ClockCounterClockwise, MagnifyingGlass } from './icons';
 
 const STORAGE_KEY = 'hscfreepdf_recent_searches';
 const MAX = 6;
@@ -48,6 +49,10 @@ export function useRecentSearches() {
   return { recent, add, clear };
 }
 
+/**
+ * The search history drawer on the search page, set as a ruled slip rather than
+ * a floating panel. Kept in markup only while it has something to hold.
+ */
 export default function RecentSearches() {
   const { t } = useLang();
   const { recent, add, clear } = useRecentSearches();
@@ -70,41 +75,36 @@ export default function RecentSearches() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between rounded-lg border border-[var(--c-line-strong)] bg-[var(--c-panel)] px-4 py-3 text-left transition hover:border-[var(--c-fg-muted)] dark:border-[var(--c-line)]"
         aria-expanded={open}
+        className="flex w-full items-center justify-between border border-[var(--c-fg)] bg-[var(--c-panel)] px-3 py-2 text-left transition-colors hover:bg-[var(--c-band)]"
       >
-        <span className="flex items-center gap-2 text-sm text-[var(--c-fg-muted)]">
-          <svg className="h-4 w-4 shrink-0 text-[var(--c-fg-subtle)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" />
-            <polyline points="12 6 12 12 16 14" />
-          </svg>
-          <span className="font-medium">{t.recent.recentTitle}</span>
+        <span className="label flex items-center gap-2">
+          <ClockCounterClockwise className="h-3.5 w-3.5" aria-hidden="true" />
+          {t.recent.recentTitle}
         </span>
-        <svg className={`h-4 w-4 shrink-0 text-[var(--c-fg-muted)] transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
+        <CaretDown
+          className={`h-4 w-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
+          aria-hidden="true"
+        />
       </button>
 
       {open && (
-        <div className="glass-panel mt-1 overflow-hidden rounded-lg">
-          <div className="flex items-center justify-between border-b border-[var(--c-line)] px-4 py-2">
-            <span className="text-xs font-medium uppercase tracking-wide text-[var(--c-fg-subtle)]">{t.recent.recentTitle}</span>
-            <button type="button" onClick={clear} className="text-xs text-[var(--c-accent)] hover:underline">
+        <div className="absolute left-0 right-0 z-[var(--z-sticky)] mt-1 border border-[var(--c-fg)] bg-[var(--c-panel)]">
+          <div className="flex items-center justify-between border-b border-[var(--c-rule)] px-3 py-2">
+            <span className="label">{t.recent.recentTitle}</span>
+            <button type="button" onClick={clear} className="mark">
               {t.recent.clear}
             </button>
           </div>
-          <ul className="py-1">
+          <ul>
             {recent.map((query) => (
-              <li key={query}>
+              <li key={query} className="border-b border-[var(--c-rule)] last:border-b-0">
                 <a
                   href={`/search?q=${encodeURIComponent(query)}`}
                   onClick={() => add(query)}
-                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-[var(--c-fg)] hover:bg-[var(--c-bg-subtle)]"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-[0.875rem] text-[var(--c-fg)] transition-colors hover:bg-[var(--c-band)] hover:text-[var(--c-spot)]"
                 >
-                  <svg className="h-4 w-4 shrink-0 text-[var(--c-fg-subtle)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="m21 21-4.3-4.3" />
-                  </svg>
+                  <MagnifyingGlass className="h-3.5 w-3.5 shrink-0 text-[var(--c-fg-subtle)]" aria-hidden="true" />
                   {query}
                 </a>
               </li>

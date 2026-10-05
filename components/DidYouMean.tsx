@@ -1,6 +1,7 @@
 'use client';
 
-import { useLang } from '@/lib/i18n';
+import { useLang, fill } from '@/lib/i18n';
+import { Lightbulb } from './icons';
 
 interface DidYouMeanProps {
   suggestion: string;
@@ -8,35 +9,23 @@ interface DidYouMeanProps {
   onSelect: (suggestion: string) => void;
 }
 
+/**
+ * The spelling correction, printed as a correction line under a rule, in the
+ * voice a printed index would use rather than as a highlighted callout box.
+ */
 export default function DidYouMean({ suggestion, query, onSelect }: DidYouMeanProps) {
   const { t } = useLang();
   if (!suggestion) return null;
   const text = suggestion.replace(/^Did you mean:\s*/, '');
 
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-[var(--c-line-strong)] bg-[var(--c-bg-subtle)] px-4 py-3 text-sm">
-      <svg
-        className="h-4 w-4 shrink-0 text-[var(--c-fg-muted)]"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M12 3a6 6 0 0 0-6 6c0 3 2 4 2 7a4 4 0 0 0 8 0c0-3 2-4 2-7a6 6 0 0 0-6-6Z" />
-        <path d="M12 17h.01" />
-      </svg>
+    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-t border-[var(--c-rule)] pt-3 text-[0.9375rem]">
+      <Lightbulb className="h-4 w-4 shrink-0 self-center text-[var(--c-fg-subtle)]" aria-hidden="true" />
       <span className="text-[var(--c-fg-muted)]">{t.dym}</span>
-      <button
-        type="button"
-        onClick={() => onSelect(text)}
-        className="font-medium text-[var(--c-accent)] hover:underline"
-      >
+      <button type="button" onClick={() => onSelect(text)} className="entry-title text-[1rem]">
         {text}
       </button>
-      <span className="sr-only">Suggested correction for the search term {query}</span>
+      <span className="sr-only">{fill(t.dymSr, { query })}</span>
     </div>
   );
 }

@@ -90,32 +90,35 @@ function SearchInner() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
-      <h1 className="text-2xl font-semibold text-[var(--c-fg)]">{t.search.title}</h1>
-      <p className="mt-1 text-sm text-[var(--c-fg-muted)]">{fill(t.search.subtitle, { count: fmt(RESOURCES.length) })}</p>
+    <div className="wrap pb-16 pt-8">
+      <h1 className="font-display text-[1.9rem] font-semibold tracking-[-0.015em] sm:text-[2.3rem]">
+        {t.search.title}
+      </h1>
+      <p className="mt-2 max-w-[72ch] text-[var(--c-fg-muted)]">
+        {fill(t.search.subtitle, { count: fmt(RESOURCES.length) })}
+      </p>
 
-      <form onSubmit={onSubmit} className="mt-5">
-        <div className="glass-panel flex items-center rounded-xl px-4">
-          <svg className="mr-3 h-5 w-5 shrink-0 text-[var(--c-fg-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
+      <form onSubmit={onSubmit} className="mt-6 max-w-[40rem]">
+        <label htmlFor="search-input" className="sr-only">
+          {t.search.query}
+        </label>
+        <div className="field">
           <input
+            id="search-input"
             name="q"
             type="search"
             value={input}
             onChange={(event) => setInput(event.target.value)}
             placeholder={t.search.query}
-            className="flex-1 bg-transparent py-3 text-[var(--c-fg)] placeholder:text-[var(--c-fg-subtle)] focus:outline-none"
             aria-label={t.search.query}
           />
-          <button type="submit" className="rounded-full bg-[var(--c-accent)] px-4 py-1.5 text-sm font-medium text-[var(--c-accent-fg)]">
+          <button type="submit" className="field-button">
             {t.hero.searchBtn}
           </button>
         </div>
       </form>
 
-      <div className="mt-4">
+      <div className="mt-4 max-w-[40rem]">
         <RecentSearches />
       </div>
 
@@ -133,7 +136,7 @@ function SearchInner() {
         </div>
       )}
 
-      <div className="mt-6 flex flex-col gap-4 border-b border-[var(--c-line)] pb-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mt-8 flex flex-col gap-6 border-t-2 border-[var(--c-fg)] pt-4 lg:flex-row lg:items-start lg:justify-between lg:gap-12">
         <FilterBar
           activeType={urlType}
           activeCategory={urlCategory}
@@ -143,21 +146,23 @@ function SearchInner() {
         <SortBar activeSort={urlSort} onSortChange={(value) => pushUrl({ sort: value })} />
       </div>
 
-      <div className="mt-4 flex flex-wrap items-baseline gap-2">
-        <span className="text-lg font-medium tabular-nums text-[var(--c-fg)]">{fmt(result.total)}</span>
+      <div className="mt-6 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span className="num text-[1.05rem]">{fmt(result.total)}</span>
         <span className="text-[var(--c-fg-muted)]">{t.search.results}</span>
-        {urlQuery && <span className="text-[var(--c-fg-subtle)]">&ldquo;{urlQuery}&rdquo;</span>}
+        {urlQuery && (
+          <span className="font-mono text-[0.8125rem] text-[var(--c-fg-subtle)]">&ldquo;{urlQuery}&rdquo;</span>
+        )}
         {hasFilters && (
-          <button type="button" onClick={clearAll} className="ml-auto text-sm text-[var(--c-accent)] hover:underline">
+          <button type="button" onClick={clearAll} className="mark ml-auto">
             {t.search.clear}
           </button>
         )}
       </div>
 
       {result.results.length === 0 ? (
-        <EmptyState query={urlQuery} total={RESOURCES.length} />
+        <EmptyState query={urlQuery} />
       ) : (
-        <ul className="mt-4 flex flex-col gap-3" aria-label={t.search.results}>
+        <ul className="register register-2col mt-3" aria-label={t.search.results}>
           {result.results.map((resource) => (
             <li key={resource.id}>
               <ResourceCard resource={resource} />
@@ -168,6 +173,7 @@ function SearchInner() {
     </div>
   );
 }
+
 
 export default function SearchPage() {
   const { t } = useLang();

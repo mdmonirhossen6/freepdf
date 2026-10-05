@@ -6,6 +6,7 @@
   "description": "Free Pdf — static, serverless searchable HSC & admission resource library for the Telegram channel @hscfreepdf.",
   "scripts": {
     "data": "node scripts/generate-data.ts",
+    "data:import": "node scripts/import-csv.ts",
     "dev": "npm run data && next dev",
     "build": "next build",
     "prebuild": "npm run data",
@@ -14,8 +15,8 @@
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
+    "@phosphor-icons/react": "^2.1.10",
     "gsap": "^3.15.0",
-    "lucide-react": "^0.468.0",
     "next": "^15.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

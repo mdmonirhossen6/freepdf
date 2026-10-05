@@ -8,36 +8,26 @@ interface SortBarProps {
   onSortChange: (sort: SortKey) => void;
 }
 
-const OPTIONS: { value: SortKey; label: string }[] = [
-  { value: 'relevance', label: 'Relevance' },
-  { value: 'newest', label: 'Newest' },
-  { value: 'oldest', label: 'Oldest' },
-];
+const OPTIONS: SortKey[] = ['relevance', 'newest', 'oldest'];
 
 export default function SortBar({ activeSort, onSortChange }: SortBarProps) {
   const { t } = useLang();
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t.sort.label}>
-      <span className="mr-1 text-xs font-medium text-[var(--c-fg-muted)]">{t.sort.label}</span>
-      {OPTIONS.map((option) => {
-        const active = activeSort === option.value;
-        return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      <span className="label">{t.sort.label}</span>
+      <div className="seg" role="group" aria-label={t.sort.label}>
+        {OPTIONS.map((value) => (
           <button
-            key={option.value}
+            key={value}
             type="button"
-            onClick={() => onSortChange(option.value)}
-            aria-pressed={active}
-            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-              active
-                ? 'border-[var(--c-accent)] bg-[var(--c-accent-soft)] text-[var(--c-accent)]'
-                : 'border-[var(--c-line-strong)] text-[var(--c-fg-muted)] hover:border-[var(--c-fg-muted)] hover:text-[var(--c-fg)]'
-            }`}
+            onClick={() => onSortChange(value)}
+            aria-pressed={activeSort === value}
           >
-            {t.sort[option.value]}
+            {t.sort[value]}
           </button>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 }

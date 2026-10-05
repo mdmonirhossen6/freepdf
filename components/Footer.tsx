@@ -3,47 +3,65 @@
 import Link from 'next/link';
 import { useLang } from '@/lib/i18n';
 
+/**
+ * The colophon. A glass index ends by naming what it is made of: the faces it
+ * is set in, the channel it indexes, and the fact that it carries no server
+ * behind it. No photography anywhere on the page, so no photo credits.
+ */
 export default function Footer() {
   const { t } = useLang();
 
   return (
-    <footer className="border-t border-[var(--c-line-strong)] bg-[var(--c-bg)]">
-      <div className="mx-auto max-w-6xl px-5 pb-10 pt-12 text-sm text-[var(--c-fg-muted)] sm:px-8 lg:px-12">
-        <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-          <div className="space-y-3 text-[var(--c-fg-muted)]">
-            <p className="font-display text-lg font-semibold text-[var(--c-fg)]">Free Pdf</p>
-            <p className="max-w-md text-[var(--c-fg-muted)]">
+    <footer className="border-t border-[var(--c-rule)] bg-[var(--c-band)] backdrop-blur-md">
+      <div className="wrap py-7">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:gap-12">
+          <div>
+            <p className="font-display text-[1.25rem] font-semibold">Free Pdf</p>
+            <p className="mt-3 max-w-[62ch] text-[0.9375rem] leading-relaxed text-[var(--c-fg-muted)]">
               {t.footer.about.split('@hscfreepdf')[0]}
               <a
                 href="https://t.me/hscfreepdf"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-medium underline-offset-2 hover:text-[var(--c-accent)] hover:underline"
+                className="link-spot"
               >
                 @hscfreepdf
               </a>{' '}
               {t.footer.about.split('@hscfreepdf')[1] ?? ''}
             </p>
+
+            <nav className="mt-5 flex flex-wrap gap-x-7 gap-y-2 text-[0.875rem]" aria-label="Footer">
+              <Link
+                href="https://t.me/hscfreepdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="link-spot"
+              >
+                {t.footer.channel}
+              </Link>
+              <Link href="https://prostuti.bd" target="_blank" rel="noopener noreferrer" className="link-spot">
+                Prostuti
+              </Link>
+              <Link href="/browse" className="link-spot">
+                {t.footer.browseLatest}
+              </Link>
+              <Link href="/search" className="link-spot">
+                {t.footer.search}
+              </Link>
+            </nav>
           </div>
-          <nav className="flex flex-wrap gap-6 text-[var(--c-fg-muted)]" aria-label="Footer links">
-            <Link href="https://t.me/hscfreepdf" target="_blank" rel="noopener noreferrer" className="underline-offset-2 hover:text-[var(--c-accent)] hover:underline">
-              {t.footer.channel}
-            </Link>
-            <Link href="https://prostuti.bd" target="_blank" rel="noopener noreferrer" className="underline-offset-2 hover:text-[var(--c-accent)] hover:underline">
-              Prostuti
-            </Link>
-            <Link href="/browse" className="underline-offset-2 hover:text-[var(--c-accent)] hover:underline">
-              {t.footer.browseLatest}
-            </Link>
-            <Link href="/search" className="underline-offset-2 hover:text-[var(--c-accent)] hover:underline">
-              {t.footer.search}
-            </Link>
-          </nav>
-          <p className="text-[var(--c-fg-subtle)] text-xs text-center md:text-left">
-            &copy; {new Date().getFullYear()} Free Pdf. {t.footer.note}
-          </p>
+
+          <div className="border-t-2 border-[var(--c-fg)] pt-3">
+            <p className="label">{t.footer.colophon}</p>
+            <p className="mt-2 text-[0.8125rem] leading-relaxed text-[var(--c-fg-muted)]">{t.footer.type}</p>
+          </div>
         </div>
+
+        <p className="mt-6 border-t border-[var(--c-rule-strong)] pt-4 text-[0.75rem] text-[var(--c-fg-subtle)]">
+          &copy; {new Date().getFullYear()} Free Pdf. {t.footer.note}
+        </p>
       </div>
     </footer>
   );
 }
+

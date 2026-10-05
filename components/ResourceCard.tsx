@@ -5,14 +5,7 @@ import type { Resource } from '@/lib/types';
 import { RESOURCES } from '@/lib/generated/resources';
 import { relatedResources } from '@/lib/search';
 import { useLang } from '@/lib/i18n';
-
-const TYPE_STYLES: Record<string, string> = {
-  PDF: 'border-[var(--c-accent)] bg-[var(--c-accent-soft)] text-[var(--c-accent)]',
-  APK: 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300',
-  Image: 'border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300',
-  Text: 'border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-950 dark:text-violet-300',
-  Other: 'border-[var(--c-line-strong)] bg-[var(--c-bg-subtle)] text-[var(--c-fg-muted)]',
-};
+import { Check, Copy, X } from './icons';
 
 export function formatDate(iso: string, locale = 'en-US'): string {
   const parts = iso.split('-').map(Number);
@@ -21,11 +14,38 @@ export function formatDate(iso: string, locale = 'en-US'): string {
   return d.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 }
 
-export default function ResourceCard({ resource, category }: { resource: Resource; category?: string }) {
+interface ResourceCardProps {
+  resource: Resource;
+  /** Overrides the category printed in the meta line (used on category pages). */
+  category?: string;
+}
+
+/**
+ * One line of the register. The number column is the file's id in the channel,
+ * so a reader can find the post by hand if the link dies. Metadata is separated
+ * by hairlines rather than dots, actions are printed marks rather than buttons,
+ * and the row carries no card, no shadow, no badge block and no photography:
+ * at two hundred rows, furniture is noise, and the accent belongs to the page's
+ * own action, not to every link.
+ */
+export default function ResourceCard({ resource, category }: ResourceCardProps) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const { t, locale } = useLang();
-  const badge = TYPE_STYLES[resource.type] ?? TYPE_STYLES.Other;
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = previous;
+    };
+  }, [open]);
 
   const copy = async () => {
     try {
@@ -37,156 +57,138 @@ export default function ResourceCard({ resource, category }: { resource: Resourc
     }
   };
 
+  const related = open ? relatedResources(resource, RESOURCES, 4) : [];
+  const title = resource.title || `${t.card.generic} ${resource.id}`;
+
   return (
     <>
-      <article className="rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-card transition hover:-translate-y-0.5 hover:border-[var(--c-accent)] hover:shadow-pop dark:border-[var(--c-line)]">
-        <div className="flex items-start gap-3">
-          <span className={`mt-0.5 inline-flex shrink-0 items-center rounded border px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${badge}`}>
-            {resource.typeLabel}
-          </span>
-          <div className="min-w-0 flex-1">
-            <h3 className="text-[15px] font-medium leading-snug text-[var(--c-fg)]">
-              <button type="button" onClick={() => setOpen(true)} className="text-left hover:text-[var(--c-accent)]">
-                {resource.title || `${t.card.generic} ${resource.id}`}
-              </button>
-            </h3>
+      <article className="entry">
+        <div className="entry-no num" aria-hidden="true">
+          {resource.id}
+        </div>
 
-            {resource.description && (
-              <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-[var(--c-fg-muted)]">{resource.description}</p>
-            )}
+        <div className="min-w-0">
+          <button type="button" className="entry-title" onClick={() => setOpen(true)}>
+            {title}
+          </button>
 
-            <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--c-fg-subtle)]">
-              <time dateTime={resource.date} className="tabular-nums">
-                {formatDate(resource.date, locale)}
-              </time>
-              <span aria-hidden="true">·</span>
-              <span>{category ?? resource.category}</span>
-            </div>
+          {resource.description && <p className="entry-desc line-clamp-2">{resource.description}</p>}
 
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <a href={resource.telegramUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm">
-                {t.card.open}
-              </a>
-              <button type="button" onClick={copy} className="btn-ghost btn-sm" aria-live="polite" aria-label={t.card.copyAria}>
-                <svg
-                  className={`h-3.5 w-3.5 shrink-0 ${copied ? 'text-[var(--c-accent)]' : ''}`}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                </svg>
-                {copied ? t.card.copied : t.card.copy}
-              </button>
-            </div>
+          <p className="entry-meta">
+            <time dateTime={resource.date}>{formatDate(resource.date, locale)}</time>
+            <span className="sep" aria-hidden="true" />
+            <span>{resource.typeLabel}</span>
+            <span className="sep" aria-hidden="true" />
+            <span>{category ?? resource.category}</span>
+          </p>
+
+          <div className="entry-acts">
+            <a
+              href={resource.telegramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mark mark-strong"
+            >
+              {t.card.open}
+            </a>
+            <button type="button" className="mark" onClick={copy} aria-label={t.card.copyAria}>
+              {copied ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : <Copy className="h-3.5 w-3.5" aria-hidden="true" />}
+              {copied ? t.card.copied : t.card.copy}
+            </button>
           </div>
         </div>
       </article>
 
-      {open && <ResourceModal resource={resource} onClose={() => setOpen(false)} />}
-    </>
-  );
-}
-
-function ResourceModal({ resource, onClose }: { resource: Resource; onClose: () => void }) {
-  const related = relatedResources(resource, RESOURCES, 5).filter((r) => r.id !== resource.id);
-  const { t, locale } = useLang();
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', onKey);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [onClose]);
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label={resource.title}
-    >
-      <button type="button" className="absolute inset-0 cursor-default" onClick={onClose} aria-label="Close dialog" tabIndex={-1} />
-      <div className="glass-modal glass-panel relative w-full max-w-2xl overflow-hidden rounded-t-xl sm:rounded-xl">
-        <div className="max-h-[90vh] overflow-y-auto p-5 sm:p-6">
-        <div className="flex items-start justify-between gap-4">
-          <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${TYPE_STYLES[resource.type] ?? TYPE_STYLES.Other}`}>
-            {resource.typeLabel}
-          </span>
-          <button type="button" onClick={onClose} className="rounded p-1 text-[var(--c-fg-muted)] hover:text-[var(--c-fg)]" aria-label={t.card.close}>
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <h2 className="mt-3 text-lg font-semibold leading-snug text-[var(--c-fg)]">
-          {resource.title || `${t.card.generic} ${resource.id}`}
-        </h2>
-
-        <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-[var(--c-fg-subtle)]">{t.card.date}</dt>
-            <dd className="mt-0.5 text-[var(--c-fg)]">{formatDate(resource.date, locale)}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-[var(--c-fg-subtle)]">{t.card.category}</dt>
-            <dd className="mt-0.5 text-[var(--c-fg)]">{resource.category}</dd>
-          </div>
-        </dl>
-
-        {resource.description && (
-          <p className="mt-4 text-sm leading-relaxed text-[var(--c-fg-muted)]">{resource.description}</p>
-        )}
-
-        <div className="mt-5 flex flex-wrap gap-2">
-          <a href={resource.telegramUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm">
-            {t.card.open}
-          </a>
+      {open && (
+        <div className="fixed inset-0 z-[var(--z-dialog)] flex items-end justify-center bg-[rgb(22_19_15/0.6)] sm:items-center sm:p-6">
           <button
             type="button"
-            onClick={() => navigator.clipboard?.writeText(resource.telegramUrl)}
-            className="btn-ghost btn-sm"
+            className="absolute inset-0 cursor-default"
+            onClick={() => setOpen(false)}
+            aria-label={t.card.close}
+            tabIndex={-1}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={`sheet-${resource.id}`}
+            className="relative max-h-[92vh] w-full max-w-2xl overflow-y-auto border border-[var(--c-fg)] bg-[var(--c-panel)]"
           >
-            {t.card.copy}
-          </button>
-        </div>
+            <div className="border-b-2 border-[var(--c-fg)] px-5 py-4 sm:px-7">
+              <div className="flex items-start justify-between gap-4">
+                <p className="label">
+                  {t.card.file} <span className="num text-[var(--c-fg)]">{resource.id}</span>
+                </p>
+                <button type="button" className="mark" onClick={() => setOpen(false)} aria-label={t.card.close}>
+                  <X className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </div>
 
-        {related.length > 0 && (
-          <div className="mt-6 border-t border-[var(--c-line)] pt-4">
-            <h3 className="text-sm font-medium text-[var(--c-fg)]">{t.card.related}</h3>
-            <ul className="mt-2 flex flex-col divide-y divide-[var(--c-line)]">
-              {related.map((item) => (
-                <li key={item.id}>
-                  <a
-                    href={item.telegramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group/related flex items-center justify-between gap-3 rounded-md px-2 py-2.5 text-sm text-[var(--c-fg-muted)] transition hover:bg-[var(--c-bg-subtle)] hover:text-[var(--c-accent)]"
-                  >
-                    <span className="line-clamp-1">{item.title}</span>
-                    <span className="shrink-0 rounded border border-[var(--c-line)] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[var(--c-fg-subtle)]">
-                      {item.typeLabel}
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
+              <h2 id={`sheet-${resource.id}`} className="mt-2 text-[1.35rem] font-semibold leading-snug">
+                {title}
+              </h2>
+            </div>
+
+            <div className="px-5 py-5 sm:px-7 sm:py-6">
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+                <div>
+                  <dt className="label">{t.card.date}</dt>
+                  <dd className="mt-1 text-sm">
+                    <time dateTime={resource.date}>{formatDate(resource.date, locale)}</time>
+                  </dd>
+                </div>
+                <div>
+                  <dt className="label">{t.card.category}</dt>
+                  <dd className="mt-1 text-sm">{category ?? resource.category}</dd>
+                </div>
+                <div>
+                  <dt className="label">{t.card.type}</dt>
+                  <dd className="mt-1 text-sm">{resource.typeLabel}</dd>
+                </div>
+              </dl>
+
+              {resource.description && (
+                <p className="mt-5 text-sm leading-relaxed text-[var(--c-fg-muted)]">{resource.description}</p>
+              )}
+
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <a
+                  href={resource.telegramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-ink btn-sm"
+                >
+                  {t.card.open}
+                </a>
+                <button type="button" className="btn-line btn-sm" onClick={copy}>
+                  {copied ? t.card.copied : t.card.copy}
+                </button>
+              </div>
+
+              {related.length > 0 && (
+                <div className="mt-6 border-t border-[var(--c-rule)] pt-4">
+                  <h3 className="label">{t.card.related}</h3>
+                  <ul className="mt-2">
+                    {related.map((item) => (
+                      <li key={item.id} className="border-b border-[var(--c-rule)]">
+                        <a
+                          href={item.telegramUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-baseline justify-between gap-4 py-2.5 text-sm text-[var(--c-fg-muted)] transition-colors hover:text-[var(--c-spot)]"
+                        >
+                          <span className="line-clamp-1">{item.title}</span>
+                          <span className="num shrink-0 text-[0.6875rem] text-[var(--c-fg-subtle)]">{item.id}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
-        )}
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }

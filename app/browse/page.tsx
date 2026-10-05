@@ -33,34 +33,48 @@ export default function BrowsePage() {
 
   return (
     <>
-      <div className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-6 lg:px-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-[var(--c-fg)] sm:text-3xl">{t.browse.title}</h1>
-        <p className="mt-2 text-[var(--c-fg-muted)]">{fill(t.browse.subtitle, { count: fmt(TOTAL_RESOURCES) })}</p>
+      <div className="wrap pb-16 pt-8">
+        <h1 className="font-display text-[1.9rem] font-semibold tracking-[-0.015em] sm:text-[2.3rem]">
+          {t.browse.title}
+        </h1>
+        <p className="mt-2 max-w-[72ch] text-[var(--c-fg-muted)]">
+          {fill(t.browse.subtitle, { count: fmt(TOTAL_RESOURCES) })}
+        </p>
 
-        <nav className="mt-5 flex flex-wrap gap-2" aria-label={t.browse.jump}>
-          {Array.from(new Set(GROUPS.map((g) => g.date.slice(0, 7)))).slice(0, 12).map((month) => (
-            <a
-              key={month}
-              href={`#month-${month}`}
-              className="rounded-full border border-[var(--c-line-strong)] px-3 py-1 text-xs text-[var(--c-fg-muted)] hover:border-[var(--c-accent)] hover:text-[var(--c-accent)]"
-            >
-              {new Date(`${month}-01T00:00:00Z`).toLocaleDateString(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' })}
-            </a>
-          ))}
+        <nav className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2" aria-label={t.browse.jump}>
+          <span className="label">{t.browse.jump}</span>
+          <div className="seg">
+            {Array.from(new Set(GROUPS.map((g) => g.date.slice(0, 7))))
+              .slice(0, 12)
+              .map((month) => (
+                <a key={month} href={`#month-${month}`}>
+                  {new Date(`${month}-01T00:00:00Z`).toLocaleDateString(locale, {
+                    month: 'long',
+                    year: 'numeric',
+                    timeZone: 'UTC',
+                  })}
+                </a>
+              ))}
+          </div>
         </nav>
 
-        <div className="mt-8 flex flex-col gap-8">
-          {shown.map((group) => (
-            <section key={group.date} id={`month-${group.date.slice(0, 7)}`} aria-labelledby={`date-${group.date}`}>
-              <div className="sticky top-0 z-10 -mx-1 mb-3 flex items-baseline gap-3 border-b border-[var(--c-line)] bg-[var(--c-header)] px-1 py-2 backdrop-blur-sm">
-                <h2 id={`date-${group.date}`} className="text-base font-semibold text-[var(--c-fg)]">
+        <div className="mt-8">
+          {shown.map((group, groupIndex) => (
+            <section
+              key={group.date}
+              id={`month-${group.date.slice(0, 7)}`}
+              aria-labelledby={`date-${group.date}`}
+              className="mb-8"
+            >
+              <div className="sticky top-[4.1rem] z-[var(--z-sticky)] flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t-2 border-[var(--c-fg)] bg-[var(--c-bg)] pb-2 pt-2">
+                <h2 id={`date-${group.date}`} className="font-display text-[1.15rem] font-semibold">
                   {formatDate(group.date, locale)}
                 </h2>
-                <span className="text-xs tabular-nums text-[var(--c-fg-subtle)]">
+                <span className="num text-[0.75rem] text-[var(--c-fg-subtle)]">
                   {fmt(group.items.length)} {t.browse.items}
                 </span>
               </div>
-              <ul className="flex flex-col gap-3">
+              <ul className="register register-2col">
                 {group.items.map((resource) => (
                   <li key={resource.id}>
                     <ResourceCard resource={resource} />
@@ -72,15 +86,14 @@ export default function BrowsePage() {
         </div>
 
         {visible < GROUPS.length && (
-          <div className="mt-8 text-center">
-            <button
-              type="button"
-              onClick={() => setVisible((value) => value + PAGE_SIZE)}
-              className="btn-ghost text-sm"
-            >
-              {t.browse.showMore} ({fill(t.browse.remaining, { count: fmt(GROUPS.length - visible) })})
+          <p className="mt-8">
+            <button type="button" onClick={() => setVisible((value) => value + PAGE_SIZE)} className="btn-line">
+              {t.browse.showMore}
+              <span className="num">
+                ({fill(t.browse.remaining, { count: fmt(GROUPS.length - visible) })})
+              </span>
             </button>
-          </div>
+          </p>
         )}
       </div>
       <Footer />

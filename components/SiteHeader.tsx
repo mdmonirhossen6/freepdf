@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLang } from '@/lib/i18n';
+import { Moon, Sun } from './icons';
 
 const NAV = [
   { href: '/search', label: 'Search' },
@@ -34,20 +35,10 @@ function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      className="rounded-full border border-[var(--c-line-strong)] p-2 text-[var(--c-fg-muted)] transition hover:border-[var(--c-fg-muted)] hover:text-[var(--c-fg)]"
+      className="border border-[var(--c-fg)] p-1.5 text-[var(--c-fg)] transition-colors hover:bg-[var(--c-fg)] hover:text-[var(--c-bg)]"
       aria-label={dark ? t.a11y.toDark : t.a11y.toLight}
     >
-      {dark ? (
-        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" />
-          <path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" />
-        </svg>
-      ) : (
-        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-        </svg>
-      )}
+      {dark ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}
     </button>
   );
 }
@@ -56,22 +47,18 @@ function LangToggle() {
   const { lang, setLang, t } = useLang();
 
   return (
-    <div
-      className="flex items-center rounded-full border border-[var(--c-line-strong)] p-0.5 text-[11px] font-semibold"
-      role="group"
-      aria-label={t.a11y.lang}
-    >
+    <div className="seg" role="group" aria-label={t.a11y.lang}>
       {(['en', 'bn'] as const).map((code) => (
         <button
           key={code}
           type="button"
           onClick={() => setLang(code)}
           aria-pressed={lang === code}
-          className={`rounded-full px-2.5 py-1 transition ${
-            lang === code
-              ? 'bg-[var(--c-accent)] text-[var(--c-accent-fg)]'
-              : 'text-[var(--c-fg-muted)] hover:text-[var(--c-fg)]'
-          }`}
+          /* Endonyms stay untranslated, and carry their own lang so screen
+             readers pronounce "বাংলা" as Bengali rather than as English. */
+          lang={code}
+          aria-label={code === 'en' ? 'English' : 'বাংলা'}
+          title={code === 'en' ? 'English' : 'বাংলা'}
         >
           {code === 'en' ? 'EN' : 'বাং'}
         </button>
@@ -80,23 +67,29 @@ function LangToggle() {
   );
 }
 
+/**
+ * The masthead. A printed index of this kind opens with a nameplate over a heavy
+ * rule, then a line of small caps for the sections, so the header is set as a
+ * nameplate rather than as an app bar: no logo tile, no pill navigation, no
+ * shadow. The heavy rule underneath is what closes the nameplate off.
+ */
 export default function SiteHeader() {
   const pathname = usePathname();
   const { t } = useLang();
 
   return (
-    <header className="glass-chrome sticky top-0 z-40 border-b border-[var(--c-line)]">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-[var(--c-fg)] font-display">
-          <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0" aria-hidden="true">
-            <rect width="24" height="24" rx="6" fill="var(--c-accent)" />
-            <path d="M8 5h8a1 1 0 0 1 1 1v13.6l-5-3-5 3V6a1 1 0 0 1 1-1Z" fill="rgb(250 246 239 / 0.96)" />
-            <path d="M10 9.5h4v1.2h-4zM10 12.5h4v1.2h-4z" fill="var(--c-accent)" />
-          </svg>
-          Free Pdf
+    <header className="sticky top-0 z-[var(--z-header)] px-3 pt-3 sm:px-5 sm:pt-4">
+      <div className="site-header-bar mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 rounded-2xl border border-[var(--glass-edge)] px-4 shadow-[var(--shadow-lift)] sm:px-5">
+        <Link href="/" className="flex items-baseline gap-2.5 text-[var(--c-fg)]">
+          <span className="font-display text-[1.35rem] font-semibold leading-none tracking-[-0.015em]">
+            Free Pdf
+          </span>
+          <span className="hidden font-mono text-[0.625rem] uppercase tracking-[0.18em] text-[var(--c-fg-subtle)] sm:inline">
+            PDF index
+          </span>
         </Link>
 
-        <nav aria-label="Main" className="hidden items-center gap-6 sm:flex">
+        <nav aria-label="Main" className="hidden items-center gap-5 md:flex">
           {NAV.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             const label = t.nav[item.label.toLowerCase() as 'search' | 'categories' | 'browse'];
@@ -104,11 +97,8 @@ export default function SiteHeader() {
               <Link
                 key={item.label}
                 href={item.href}
-                className={`text-sm transition ${
-                  active
-                    ? 'font-medium text-[var(--c-fg)]'
-                    : 'text-[var(--c-fg-muted)] hover:text-[var(--c-fg)]'
-                }`}
+                aria-current={active ? 'page' : undefined}
+                className="navlink"
               >
                 {label}
               </Link>
@@ -117,11 +107,11 @@ export default function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link href="/search" className="btn-ghost px-3 py-1.5 text-xs sm:hidden" aria-label={t.a11y.openSearch}>
-            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
+          <Link
+            href="/search"
+            className="mark md:hidden"
+            aria-label={t.a11y.openSearch}
+          >
             {t.nav.search}
           </Link>
           <LangToggle />

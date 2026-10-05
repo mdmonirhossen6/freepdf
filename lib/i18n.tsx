@@ -14,33 +14,56 @@ const en0 = {
     lang: 'Language',
   },
   hero: {
-    eyebrow: 'The @hscfreepdf index',
-    titleA: 'Every PDF,',
-    titleAccent: 'one search',
-    titleB: 'away.',
-    subtitle:
-      'HSC, university admission, medical, engineering, BCS and more — {count} resources from the Telegram channel. No sign-up. Always free.',
+    title: 'Find the study PDF you need.',
+    rule: 'Search Bengali or English across {count} HSC, admission, medical, engineering and job PDFs indexed from @hscfreepdf.',
+    searchLabel: 'Search the PDF index',
+    indexed: 'files indexed. ',
     searchBtn: 'Search',
     browse: 'browse the full index',
+    popular: 'Popular right now',
+    chipAria: 'Search “{q}”, {count} matching files',
+  },
+  how: {
+    heading: 'How the index works',
+    body: 'No account, no app, no redirect maze. Type it, scan the results, open the PDF.',
+    steps: [
+      {
+        title: 'Search in Bangla or English',
+        body: '“রসায়ন ২য় পত্র”, “chemistry 2” and “ACS” all reach the same files. Spelling and word order are forgiving.',
+      },
+      {
+        title: 'See what you are opening',
+        body: 'Every result lists its post date, exam track and file type, plus related titles from the same series.',
+      },
+      {
+        title: 'Open the file on Telegram',
+        body: 'Each result points at the original @hscfreepdf post. One tap, no ad wall, no waiting queue.',
+      },
+    ],
+    note: '{count} files indexed so far. The channel keeps adding more every day.',
+  },
+  ledger: {
+    eyebrow: 'The index at a glance',
+    total: 'Files indexed',
+    pdf: 'PDF files',
+    tracks: 'Exam tracks',
+    updated: 'Last added',
+    srSummary: 'Library ledger: {count} files indexed from the @hscfreepdf channel.',
   },
   recent: { title: 'Recent', viewAll: 'View all', recentTitle: 'Recent searches', clear: 'Clear' },
   bento: {
-    eyebrow: 'The full index',
-    heading: 'Seven tracks. One shelf.',
+    heading: 'Browse by exam track',
     all: 'All categories',
-    stat: 'free resources. No sign-up, ever.',
     resources: 'resources',
   },
-  statement: 'One channel. One index. Every book, test paper and digest — searchable in seconds, free forever.',
   latest: {
-    eyebrow: 'Recently added',
-    heading: 'Newest resources',
-    uploaded: 'Latest upload: {date}',
-    viewAll: 'View all {count} resources',
+    heading: 'Newest entries',
+    uploaded: 'Last entry added {date}',
+    viewAll: 'Browse the full index',
   },
   cta: {
     heading: "Can't find it? Ask the channel.",
-    body: 'New resources are posted and indexed every day. If something is missing, request it directly on Telegram — a human answers.',
+    body: 'New resources are posted and indexed every day. If something is missing, request it directly on Telegram. A human answers.',
     button: 'Open @hscfreepdf',
   },
   card: {
@@ -53,14 +76,19 @@ const en0 = {
     related: 'Related resources',
     close: 'Close',
     generic: 'Resource',
+    file: 'File',
+    type: 'Type',
   },
   footer: {
     about:
       'A static, searchable index of study resources from the @hscfreepdf Telegram channel. All links point to the original Telegram posts.',
     channel: 'Telegram channel',
-    browseLatest: 'Browse latest',
+    browseLatest: 'Browse the full index',
     search: 'Search',
     note: 'Built as a static site. No server. No database.',
+    colophon: 'Colophon',
+    type: 'Set in EB Garamond, Noto Serif Bengali, Hind Siliguri and IBM Plex Mono.',
+    credits: 'Photo credits',
   },
   search: {
     title: 'Search resources',
@@ -71,6 +99,7 @@ const en0 = {
     query: 'Search query',
   },
   dym: 'Did you mean:',
+  dymSr: 'Suggested correction for the search term {query}',
   empty: {
     title: 'No matching resources found',
     prefix: "We couldn't find anything for",
@@ -82,13 +111,13 @@ const en0 = {
       'Clearing the type or category filters',
     ],
     popular: 'Popular resources instead',
-    browseAll: 'Browse all {count} resources',
+    browseAll: 'Browse the full index',
   },
   filter: { type: 'Resource type', category: 'Education category' },
   sort: { label: 'Sort', relevance: 'Relevance', newest: 'Newest', oldest: 'Oldest' },
   browse: {
     title: 'Browse by date',
-    subtitle: 'All {count} indexed resources, newest first — grouped by the day they were posted to the channel.',
+    subtitle: 'All {count} indexed resources, newest first, grouped by the day they were posted to the channel.',
     items: 'items',
     showMore: 'Show more dates',
     remaining: '{count} remaining',
@@ -133,33 +162,56 @@ const bn: Dict = {
     lang: 'ভাষা',
   },
   hero: {
-    eyebrow: '@hscfreepdf ইনডেক্স',
-    titleA: 'প্রতিটি পিডিএফ,',
-    titleAccent: 'এক সার্চেই',
-    titleB: 'হাতের মুঠোয়।',
-    subtitle:
-      'এইচএসসি, বিশ্ববিদ্যালয় ভর্তি, মেডিকেল, ইঞ্জিনিয়ারিং, বিসিএস ও আরও অনেক কিছু — টেলিগ্রাম চ্যানেলের {count} রিসোর্স। সাইন-আপ লাগে না, চিরকাল ফ্রি।',
+    title: 'প্রয়োজনের স্টাডি পিডিএফ খুঁজে নিন।',
+    rule: '@hscfreepdf থেকে ইনডেক্স করা {count}টি এইচএসসি, ভর্তি, মেডিকেল, ইঞ্জিনিয়ারিং ও চাকরির প্রস্তুতির পিডিএফ বাংলা বা ইংরেজিতে সার্চ করুন।',
+    searchLabel: 'পিডিএফ ইনডেক্সে সার্চ করুন',
+    indexed: 'টি ফাইল ইনডেক্স করা আছে। ',
     searchBtn: 'সার্চ',
     browse: 'পুরো ইনডেক্স ব্রাউজ করুন',
+    popular: 'এখন জনপ্রিয়',
+    chipAria: '“{q}” সার্চ করুন, {count}টি ফাইল মিলবে',
+  },
+  how: {
+    heading: 'ইনডেক্সটি কীভাবে কাজ করে',
+    body: 'অ্যাকাউন্ট নেই, অ্যাপ নেই, রিডাইরেক্টের গোলকধাঁধা নেই। লিখুন, ফলাফল দেখে নিন, ফাইল খুলুন।',
+    steps: [
+      {
+        title: 'বাংলা বা ইংরেজিতেই সার্চ',
+        body: '“রসায়ন ২য় পত্র”, “chemistry 2” বা “ACS” সবই একই ফাইলে পৌঁছে দেয়। বানান আর শব্দের ক্রম নিয়ে ভাবতে হয় না।',
+      },
+      {
+        title: 'কী খুলছেন, আগেই দেখে নিন',
+        body: 'প্রতিটি ফলে পোস্টের তারিখ, পরীক্ষার ট্র্যাক ও ফাইলের ধরন লেখা থাকে, সঙ্গে একই সিরিজের সম্পর্কিত শিরোনামও।',
+      },
+      {
+        title: 'টেলিগ্রামে ফাইল খুলুন',
+        body: 'প্রতিটি ফল @hscfreepdf-এর মূল পোস্টে যায়। এক ট্যাপেই খুলে যায়। বিজ্ঞাপনের দেয়াল নেই, অপেক্ষার লাইন নেই।',
+      },
+    ],
+    note: 'এখন পর্যন্ত {count}টি ফাইল ইনডেক্স করা হয়েছে। চ্যানেলে প্রতিদিনই নতুন যোগ হচ্ছে।',
+  },
+  ledger: {
+    eyebrow: 'এক নজরে ইনডেক্স',
+    total: 'ইনডেক্স করা ফাইল',
+    pdf: 'পিডিএফ ফাইল',
+    tracks: 'পরীক্ষার ট্র্যাক',
+    updated: 'সর্বশেষ যোগ',
+    srSummary: 'হিসাব: @hscfreepdf চ্যানেল থেকে {count}টি ফাইল ইনডেক্স করা হয়েছে।',
   },
   recent: { title: 'সাম্প্রতিক', viewAll: 'সব দেখুন', recentTitle: 'সাম্প্রতিক সার্চ', clear: 'মুছুন' },
   bento: {
-    eyebrow: 'পুরো ইনডেক্স',
-    heading: 'সাতটি ট্র্যাক, একটাই তাক।',
+    heading: 'পরীক্ষার ট্র্যাক অনুযায়ী ব্রাউজ করুন',
     all: 'সব ক্যাটাগরি',
-    stat: 'ফ্রি রিসোর্স — কোনো সাইন-আপ নেই।',
     resources: 'রিসোর্স',
   },
-  statement: 'একটি চ্যানেল, একটি ইনডেক্স। প্রতিটি বই, টেস্ট পেপার ও ডাইজেস্ট — সেকেন্ডেই সার্চ, চিরকাল ফ্রি।',
   latest: {
-    eyebrow: 'সাম্প্রতিক সংযোজন',
-    heading: 'নতুন রিসোর্স',
-    uploaded: 'সর্বশেষ আপলোড: {date}',
-    viewAll: 'সব {count} রিসোর্স দেখুন',
+    heading: 'সর্বশেষ এন্ট্রি',
+    uploaded: 'সর্বশেষ যোগ হয়েছে {date}',
+    viewAll: 'পুরো ইনডেক্স ব্রাউজ করুন',
   },
   cta: {
     heading: 'খুঁজে পাওয়া যাচ্ছে না? চ্যানেলে জানান।',
-    body: 'প্রতিদিন নতুন রিসোর্স পোস্ট ও ইনডেক্স করা হয়। কিছু বাদ পড়লে সরাসরি টেলিগ্রামে রিকোয়েস্ট করুন — মানুষই উত্তর দেয়।',
+    body: 'প্রতিদিন নতুন রিসোর্স পোস্ট ও ইনডেক্স করা হয়। কিছু বাদ পড়লে সরাসরি টেলিগ্রামে রিকোয়েস্ট করুন। মানুষই উত্তর দেয়।',
     button: '@hscfreepdf খুলুন',
   },
   card: {
@@ -172,23 +224,29 @@ const bn: Dict = {
     related: 'সম্পর্কিত রিসোর্স',
     close: 'বন্ধ করুন',
     generic: 'রিসোর্স',
+    file: 'ফাইল',
+    type: 'ধরন',
   },
   footer: {
     about: '@hscfreepdf টেলিগ্রাম চ্যানেলের স্টাডি রিসোর্সের একটি স্ট্যাটিক, সার্চেবল ইনডেক্স। সব লিংক মূল টেলিগ্রাম পোস্টে যায়।',
     channel: 'টেলিগ্রাম চ্যানেল',
-    browseLatest: 'সর্বশেষ ব্রাউজ করুন',
+    browseLatest: 'পুরো ইনডেক্স ব্রাউজ করুন',
     search: 'সার্চ',
-    note: 'স্ট্যাটিক সাইট — সার্ভার নেই, ডেটাবেজ নেই।',
+    note: 'স্ট্যাটিক সাইট। সার্ভার নেই, ডেটাবেজ নেই।',
+    colophon: 'কোলোফোন',
+    type: 'যে ফন্টে সেট করা: EB Garamond, Noto Serif Bengali, Hind Siliguri ও IBM Plex Mono।',
+    credits: 'ছবির ক্রেডিট',
   },
   search: {
     title: 'রিসোর্স সার্চ',
-    subtitle: '{count} রিসোর্স ইনডেক্স করা আছে — এইচএসসি, ভর্তি, মেডিকেল, ইঞ্জিনিয়ারিং, বিসিএসসহ আরও অনেক কিছু।',
+    subtitle: '{count} রিসোর্স ইনডেক্স করা আছে। এইচএসসি, ভর্তি, মেডিকেল, ইঞ্জিনিয়ারিং, বিসিএসসহ আরও অনেক কিছু।',
     results: 'ফলাফল',
     clear: 'ফিল্টার মুছুন',
     loading: 'সার্চ লোড হচ্ছে…',
     query: 'সার্চ করার বিষয়',
   },
   dym: 'আপনি কি এটি খুঁজছেন:',
+  dymSr: '“{query}” সার্চের জন্য প্রস্তাবিত সংশোধন',
   empty: {
     title: 'কোনো ম্যাচিং রিসোর্স পাওয়া যায়নি',
     prefix: 'এখানে কিছু পাওয়া যায়নি:',
@@ -196,17 +254,17 @@ const bn: Dict = {
     tips: [
       'বানান যাচাই করা',
       'ছোট, বেশি সাধারণ শব্দ দিয়ে সার্চ করা',
-      'বাংলা বা ইংরেজি — দুটোতেই সার্চ কাজ করে',
+      'বাংলা বা ইংরেজিতে, দুটোতেই সার্চ কাজ করে',
       'টাইপ বা ক্যাটাগরি ফিল্টার মুছে ফেলা',
     ],
     popular: 'বিকল্প: জনপ্রিয় রিসোর্স',
-    browseAll: 'সব {count} রিসোর্স ব্রাউজ করুন',
+    browseAll: 'পুরো ইনডেক্স ব্রাউজ করুন',
   },
   filter: { type: 'রিসোর্স টাইপ', category: 'শিক্ষা ক্যাটাগরি' },
   sort: { label: 'সাজান', relevance: 'প্রাসঙ্গিকতা', newest: 'নতুন আগে', oldest: 'পুরনো আগে' },
   browse: {
     title: 'তারিখ অনুযায়ী ব্রাউজ',
-    subtitle: 'মোট {count} ইনডেক্স করা রিসোর্স, নতুন আগে — চ্যানেলে পোস্ট করার দিন অনুযায়ী গোট করা।',
+    subtitle: 'মোট {count} ইনডেক্স করা রিসোর্স, নতুন আগে; চ্যানেলে পোস্ট করার দিন অনুযায়ী গোট করা।',
     items: 'টি',
     showMore: 'আরও তারিখ দেখুন',
     remaining: '{count} বাকি',
@@ -264,9 +322,15 @@ export function LangProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // The <html lang> attribute must follow the UI language, otherwise the
+  // document claims Bengali while English is on screen (bad for assistive
+  // tech, browser translation and font selection).
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
   const setLang = (next: Lang) => {
     setLangState(next);
-    document.documentElement.lang = next;
     try {
       localStorage.setItem(STORAGE_KEY, next);
     } catch {
