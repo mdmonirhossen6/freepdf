@@ -100,7 +100,7 @@ export default function ResourceCard({ resource, category }: ResourceCardProps) 
       </article>
 
       {open && (
-        <div className="fixed inset-0 z-[var(--z-dialog)] flex items-end justify-center bg-[rgb(22_19_15/0.6)] sm:items-center sm:p-6">
+        <div className="fixed inset-0 z-[var(--z-dialog)] flex items-end justify-center bg-[rgb(6_4_12/0.66)] backdrop-blur-md sm:items-center sm:p-6">
           <button
             type="button"
             className="absolute inset-0 cursor-default"
@@ -112,7 +112,7 @@ export default function ResourceCard({ resource, category }: ResourceCardProps) 
             role="dialog"
             aria-modal="true"
             aria-labelledby={`sheet-${resource.id}`}
-            className="relative max-h-[92vh] w-full max-w-2xl overflow-y-auto border border-[var(--c-fg)] bg-[var(--c-panel)]"
+            className="relative max-h-[92vh] w-full max-w-2xl overflow-y-auto border border-[var(--c-fg)] bg-[var(--c-bg)] shadow-[0_32px_80px_-16px_rgb(0_0_0_/_0.7)]"
           >
             <div className="border-b-2 border-[var(--c-fg)] px-5 py-4 sm:px-7">
               <div className="flex items-start justify-between gap-4">
