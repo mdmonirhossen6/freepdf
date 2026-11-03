@@ -22,7 +22,7 @@ export default function DidYouMean({ suggestion, query, onSelect }: DidYouMeanPr
     <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-t border-[var(--c-rule)] pt-3 text-[0.9375rem]">
       <Lightbulb className="h-4 w-4 shrink-0 self-center text-[var(--c-fg-subtle)]" aria-hidden="true" />
       <span className="text-[var(--c-fg-muted)]">{t.dym}</span>
-      <button type="button" onClick={() => onSelect(text)} className="entry-title text-[1rem]">
+      <button type="button" onClick={() => onSelect(text)} className="link-spot bg-transparent">
         {text}
       </button>
       <span className="sr-only">{fill(t.dymSr, { query })}</span>

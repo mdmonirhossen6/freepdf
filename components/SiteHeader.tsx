@@ -35,7 +35,7 @@ function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      className="border border-[var(--c-fg)] p-1.5 text-[var(--c-fg)] transition-colors hover:bg-[var(--c-fg)] hover:text-[var(--c-bg)]"
+      className="icon-button"
       aria-label={dark ? t.a11y.toDark : t.a11y.toLight}
     >
       {dark ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}
@@ -67,29 +67,35 @@ function LangToggle() {
   );
 }
 
+function BrandMark() {
+  return (
+    <svg className="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      <rect width="64" height="64" rx="2" fill="var(--c-spot)" />
+      <path d="M20 12h24a4 4 0 0 1 4 4v36L32 41.5 16 52V16a4 4 0 0 1 4-4Z" fill="var(--c-bg)" />
+      <path d="M27 23h10v2.5H27zM27 29h10v2.5H27z" fill="var(--c-spot)" />
+    </svg>
+  );
+}
+
 /**
- * The masthead. A printed index of this kind opens with a nameplate over a heavy
- * rule, then a line of small caps for the sections, so the header is set as a
- * nameplate rather than as an app bar: no logo tile, no pill navigation, no
- * shadow. The heavy rule underneath is what closes the nameplate off.
+ * One masthead on every page: bookmark mark, nameplate, section links and the
+ * two view controls. It sits on the same measure as the content below, so the
+ * left and right edges line up at every width.
  */
 export default function SiteHeader() {
   const pathname = usePathname();
   const { t } = useLang();
 
   return (
-    <header className="sticky top-0 z-[var(--z-header)] px-3 pt-3 sm:px-5 sm:pt-4">
-      <div className="site-header-bar mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 rounded-2xl border border-[var(--glass-edge)] px-4 shadow-[var(--shadow-lift)] sm:px-5">
-        <Link href="/" className="flex items-baseline gap-2.5 text-[var(--c-fg)]">
-          <span className="font-display text-[1.35rem] font-semibold leading-none tracking-[-0.015em]">
-            Free Pdf
-          </span>
-          <span className="hidden font-mono text-[0.625rem] uppercase tracking-[0.18em] text-[var(--c-fg-subtle)] sm:inline">
-            PDF index
-          </span>
+    <header className="site-header">
+      <div className="wrap site-header-inner">
+        <Link href="/" className="brand" aria-label="Free Pdf home">
+          <BrandMark />
+          <span className="brand-name">Free Pdf</span>
+          <span className="brand-sub">PDF index</span>
         </Link>
 
-        <nav aria-label="Main" className="hidden items-center gap-5 md:flex">
+        <nav aria-label="Main" className="site-nav">
           {NAV.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             const label = t.nav[item.label.toLowerCase() as 'search' | 'categories' | 'browse'];
@@ -106,14 +112,7 @@ export default function SiteHeader() {
           })}
         </nav>
 
-        <div className="flex items-center gap-2">
-          <Link
-            href="/search"
-            className="mark md:hidden"
-            aria-label={t.a11y.openSearch}
-          >
-            {t.nav.search}
-          </Link>
+        <div className="header-controls">
           <LangToggle />
           <ThemeToggle />
         </div>

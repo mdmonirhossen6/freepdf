@@ -13,9 +13,9 @@ interface BentoProps {
 }
 
 /**
- * The shelves, set as a dense ruled ledger: every track on one line with its
- * real count and blurb, no photography. At seven tracks a photo grid is seven
- * irrelevant pictures; a ledger is seven answers.
+ * The shelves, set as a ruled ledger: how the index works on the left, every
+ * track on the right with its real count. No photography and no tiles, because
+ * at this density a picture is decoration and a count is an answer.
  */
 export default function Bento({ categories, heading }: BentoProps) {
   const { t, fmt } = useLang();
@@ -29,49 +29,52 @@ export default function Bento({ categories, heading }: BentoProps) {
   }
 
   return (
-    <section className="section-tight border-b border-[var(--c-rule)]" aria-labelledby="bento-heading">
+    <section className="section" aria-labelledby={heading === false ? undefined : 'bento-heading'}>
       <div className="wrap">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-10">
-          <div>
-            {heading !== false && (
-              <h2 id="bento-heading" className="font-display text-[1.7rem] font-semibold tracking-[-0.01em] sm:text-[2rem]">
-                {heading ?? t.bento.heading}
-              </h2>
-            )}
-            <p className="mt-2 max-w-[40ch] text-[0.9375rem] leading-relaxed text-[var(--c-fg-muted)]">
-              {t.how.body}
+        {heading !== false && (
+          <div className="section-head">
+            <h2 id="bento-heading" className="section-title">
+              {heading ?? t.bento.heading}
+            </h2>
+            <p className="text-sm">
+              <Link href="/category" className="link-spot">
+                {t.bento.all}
+              </Link>
             </p>
-            <ol className="mt-4 space-y-3">
+          </div>
+        )}
+
+        <div className={`split${heading !== false ? ' mt-6' : ''}`}>
+          <div>
+            <h3 className="font-display text-[1.15rem] font-semibold leading-snug">{t.how.heading}</h3>
+            <p className="split-lede mt-2">{t.how.body}</p>
+            <ol className="steps">
               {t.how.steps.map((step, index) => (
-                <li key={step.title} className="flex gap-3 border-t border-[var(--c-rule)] pt-3">
-                  <span className="num text-[0.75rem] text-[var(--c-spot)]">0{index + 1}</span>
+                <li key={step.title} className="step">
+                  <span className="step-no">0{index + 1}</span>
                   <span>
-                    <span className="block text-[0.9375rem] font-semibold text-[var(--c-fg)]">{step.title}</span>
-                    <span className="mt-0.5 block text-[0.8125rem] leading-relaxed text-[var(--c-fg-muted)]">{step.body}</span>
+                    <span className="step-title">{step.title}</span>
+                    <span className="step-body">{step.body}</span>
                   </span>
                 </li>
               ))}
             </ol>
           </div>
 
-          <ul className="mask-in mask-1 border-t-2 border-[var(--c-fg)]">
+          <ul className="track-list">
             {categories.map((category) => {
               const meta = cats[category.slug] ?? { name: category.name, blurb: category.blurb };
               return (
-                <li key={category.slug} className="border-b border-[var(--c-rule)]">
-                  <Link
-                    href={`/category/${category.slug}`}
-                    className="group grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 gap-y-0.5 py-3 transition-colors hover:bg-[var(--c-panel)]"
-                  >
-                    <span className="flex items-baseline gap-2 font-display text-[1.15rem] font-semibold leading-tight text-[var(--c-fg)] transition-colors group-hover:text-[var(--c-spot)]">
+                <li key={category.slug}>
+                  <Link href={`/category/${category.slug}`} className="track-row">
+                    <span className="track-name">
                       {meta.name}
-                      <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-[var(--c-fg-subtle)] transition-all group-hover:translate-x-0.5 group-hover:text-[var(--c-spot)]" aria-hidden="true" />
+                      <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                     </span>
-                    <span className="num text-right text-[0.9375rem] text-[var(--c-fg)]">
-                      {fmt(counts.get(category.name) ?? 0)}
-                      <span className="ml-1 text-[0.6875rem] text-[var(--c-fg-subtle)]">{t.bento.resources}</span>
+                    <span className="track-count">
+                      {fmt(counts.get(category.name) ?? 0)} <small>{t.bento.resources}</small>
                     </span>
-                    <span className="col-span-2 line-clamp-1 text-[0.8125rem] text-[var(--c-fg-muted)]">{meta.blurb}</span>
+                    <span className="track-blurb">{meta.blurb}</span>
                   </Link>
                 </li>
               );
@@ -82,6 +85,3 @@ export default function Bento({ categories, heading }: BentoProps) {
     </section>
   );
 }
-
-
-

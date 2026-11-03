@@ -3,7 +3,6 @@ import { CATEGORY_META, categoryBySlug } from '@/lib/categories';
 import { RESOURCES } from '@/lib/generated/resources';
 import { searchAll } from '@/lib/search';
 import ResourceCard from '@/components/ResourceCard';
-import Provider from '@/components/Provider';
 import CategoryHeader from '@/components/CategoryHeader';
 import RecentSearches from '@/components/RecentSearches';
 import EmptyState from '@/components/EmptyState';
@@ -19,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const meta = categoryBySlug(slug);
   if (!meta) return { title: 'Free Pdf' };
   return {
-    title: `${meta.name} | Free Pdf`,
+    title: meta.name,
     description: meta.blurb,
     alternates: { canonical: `https://hscfreepdf.vercel.app/category/${slug}/` },
     openGraph: {
@@ -58,9 +57,9 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   const displayCategory = meta.name;
 
   return (
-    <Provider>
+    <>
       <CategoryHeader meta={meta} count={count} />
-      <div className="wrap pt-6">
+      <div className="wrap pt-4">
         <RecentSearches />
       </div>
       {results.results.length === 0 ? (
@@ -68,7 +67,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
           <EmptyState query="" />
         </div>
       ) : (
-        <section className="wrap pb-16 pt-6" aria-label={displayCategory}>
+        <section className="wrap pb-16 pt-4" aria-label={displayCategory}>
           <ul className="register register-2col">
             {results.results.map((resource) => (
               <li key={resource.id}>
@@ -79,6 +78,6 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
         </section>
       )}
       <Footer />
-    </Provider>
+    </>
   );
 }

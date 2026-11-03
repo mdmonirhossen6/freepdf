@@ -14,7 +14,7 @@ export default function SortBar({ activeSort, onSortChange }: SortBarProps) {
   const { t } = useLang();
 
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+    <div className="sort-bar">
       <span className="label">{t.sort.label}</span>
       <div className="seg" role="group" aria-label={t.sort.label}>
         {OPTIONS.map((value) => (

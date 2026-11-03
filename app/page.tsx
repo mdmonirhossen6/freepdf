@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Provider from '@/components/Provider';
 import FrontPage from '@/components/FrontPage';
 import Bento from '@/components/Bento';
 import LatestResources from '@/components/LatestResources';
@@ -49,12 +48,12 @@ const structuredData = {
 
 export default function HomePage() {
   return (
-    <Provider>
+    <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <div className="w-full max-w-full overflow-x-hidden">
+      <div className="w-full max-w-full">
         <FrontPage total={TOTAL_RESOURCES} />
 
         <LatestResources resources={RESOURCES.slice(0, 6)} latestDate={LATEST_RESOURCE_DATE} />
@@ -64,6 +63,6 @@ export default function HomePage() {
         <CtaBand />
         <Footer />
       </div>
-    </Provider>
+    </>
   );
 }

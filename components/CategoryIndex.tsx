@@ -14,17 +14,13 @@ export default function CategoryIndex() {
   const { t, fmt } = useLang();
 
   return (
-    <div className="pb-14 pt-8">
-      <div className="wrap">
-        <h1 className="font-display text-[1.9rem] font-semibold tracking-[-0.015em] sm:text-[2.3rem]">{t.cat.title}</h1>
-        <p className="mt-2 max-w-[72ch] text-[var(--c-fg-muted)]">
-          {fill(t.cat.subtitle, { count: fmt(TOTAL_RESOURCES) })}
-        </p>
+    <div className="pb-14">
+      <div className="wrap page-head">
+        <h1 className="page-title">{t.cat.title}</h1>
+        <p className="page-lede">{fill(t.cat.subtitle, { count: fmt(TOTAL_RESOURCES) })}</p>
       </div>
 
-      <div className="mt-8">
-        <Bento categories={CATEGORY_META} heading={false} />
-      </div>
+      <Bento categories={CATEGORY_META} heading={false} />
     </div>
   );
 }

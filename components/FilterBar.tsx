@@ -30,9 +30,9 @@ export default function FilterBar({ activeType, activeCategory, onTypeChange, on
 
   return (
     <div className="flex flex-col gap-3">
-      <fieldset className="m-0 border-0 p-0">
+      <fieldset className="filter-group">
         <legend className="label">{t.filter.type}</legend>
-        <div className="seg mt-2">
+        <div className="seg">
           {RESOURCE_TYPES.map((type) => (
             <button
               key={type}
@@ -46,9 +46,9 @@ export default function FilterBar({ activeType, activeCategory, onTypeChange, on
         </div>
       </fieldset>
 
-      <fieldset className="m-0 border-0 p-0">
+      <fieldset className="filter-group">
         <legend className="label">{t.filter.category}</legend>
-        <div className="seg mt-2">
+        <div className="seg">
           {RESOURCE_CATEGORIES.map((category) => {
             const slug = slugFor(category);
             const label = (slug && cats[slug]?.name) || category;

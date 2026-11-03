@@ -3,10 +3,11 @@
 import Link from 'next/link';
 import { RESOURCES } from '@/lib/generated/resources';
 import { useLang } from '@/lib/i18n';
+import ResourceCard from './ResourceCard';
 
 /**
  * The notice a printed index prints when a heading has no entries: the heading
- * itself, the reason, and the neighbouring entries a reader can turn to instead.
+ * itself, the reason, the neighbouring entries a reader can turn to instead.
  */
 export default function EmptyState({ query }: { query: string }) {
   const { t } = useLang();
@@ -46,29 +47,10 @@ export default function EmptyState({ query }: { query: string }) {
 
       <div className="mt-10">
         <h3 className="label">{t.empty.popular}</h3>
-        <ul className="mt-3 register register-2col">
+        <ul className="register mt-2">
           {latest.map((resource) => (
             <li key={resource.id}>
-              <div className="entry">
-                <div className="entry-no num" aria-hidden="true">
-                  {resource.id}
-                </div>
-                <div className="min-w-0">
-                  <a
-                    href={resource.telegramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="entry-title inline"
-                  >
-                    {resource.title}
-                  </a>
-                  <p className="entry-meta">
-                    <time dateTime={resource.date}>{resource.date}</time>
-                    <span className="sep" aria-hidden="true" />
-                    <span>{resource.typeLabel}</span>
-                  </p>
-                </div>
-              </div>
+              <ResourceCard resource={resource} />
             </li>
           ))}
         </ul>

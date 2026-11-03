@@ -90,53 +90,51 @@ function SearchInner() {
   };
 
   return (
-    <div className="wrap pb-16 pt-8">
-      <h1 className="font-display text-[1.9rem] font-semibold tracking-[-0.015em] sm:text-[2.3rem]">
-        {t.search.title}
-      </h1>
-      <p className="mt-2 max-w-[72ch] text-[var(--c-fg-muted)]">
-        {fill(t.search.subtitle, { count: fmt(RESOURCES.length) })}
-      </p>
+    <div className="wrap pb-16">
+      <header className="page-head">
+        <h1 className="page-title">{t.search.title}</h1>
+        <p className="page-lede">{fill(t.search.subtitle, { count: fmt(RESOURCES.length) })}</p>
 
-      <form onSubmit={onSubmit} className="mt-6 max-w-[40rem]">
-        <label htmlFor="search-input" className="sr-only">
-          {t.search.query}
-        </label>
-        <div className="field">
-          <input
-            id="search-input"
-            name="q"
-            type="search"
-            value={input}
-            onChange={(event) => setInput(event.target.value)}
-            placeholder={t.search.query}
-            aria-label={t.search.query}
-          />
-          <button type="submit" className="field-button">
-            {t.hero.searchBtn}
-          </button>
+        <form onSubmit={onSubmit} className="mt-6 max-w-[40rem]">
+          <label htmlFor="search-input" className="sr-only">
+            {t.search.query}
+          </label>
+          <div className="field">
+            <input
+              id="search-input"
+              name="q"
+              type="search"
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              placeholder={t.search.query}
+              aria-label={t.search.query}
+            />
+            <button type="submit" className="field-button">
+              {t.hero.searchBtn}
+            </button>
+          </div>
+        </form>
+
+        <div className="mt-3 max-w-[40rem]">
+          <RecentSearches />
         </div>
-      </form>
 
-      <div className="mt-4 max-w-[40rem]">
-        <RecentSearches />
-      </div>
+        {result.didYouMean && (
+          <div className="mt-3">
+            <DidYouMean
+              suggestion={result.didYouMean}
+              query={urlQuery}
+              onSelect={(value) => {
+                setInput(value);
+                setDebounced(value);
+                pushUrl({ q: value });
+              }}
+            />
+          </div>
+        )}
+      </header>
 
-      {result.didYouMean && (
-        <div className="mt-4">
-          <DidYouMean
-            suggestion={result.didYouMean}
-            query={urlQuery}
-            onSelect={(value) => {
-              setInput(value);
-              setDebounced(value);
-              pushUrl({ q: value });
-            }}
-          />
-        </div>
-      )}
-
-      <div className="mt-8 flex flex-col gap-6 border-t-2 border-[var(--c-fg)] pt-4 lg:flex-row lg:items-start lg:justify-between lg:gap-12">
+      <div className="filter-bar">
         <FilterBar
           activeType={urlType}
           activeCategory={urlCategory}
@@ -146,7 +144,7 @@ function SearchInner() {
         <SortBar activeSort={urlSort} onSortChange={(value) => pushUrl({ sort: value })} />
       </div>
 
-      <div className="mt-6 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+      <div className="result-bar">
         <span className="num text-[1.05rem]">{fmt(result.total)}</span>
         <span className="text-[var(--c-fg-muted)]">{t.search.results}</span>
         {urlQuery && (

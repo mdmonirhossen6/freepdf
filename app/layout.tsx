@@ -108,7 +108,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SiteHeader />
           <main id="main">{children}</main>
         </LangProvider>
-        <div className="screen" aria-hidden="true" />
       </body>
     </html>
   );

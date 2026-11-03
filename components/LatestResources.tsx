@@ -11,24 +11,23 @@ interface LatestResourcesProps {
 }
 
 /**
- * The six most recent entries, printed as the top of the register. Only the
- * first three carry a plate, because the plate marks the day's leading entries
- * rather than decorating every row.
+ * The six most recent entries, printed as the top of the register. No plates,
+ * no cards: the row alignment and the metadata carry the structure.
  */
 export default function LatestResources({ resources, latestDate }: LatestResourcesProps) {
   const { t, locale } = useLang();
 
   return (
-    <section className="section-tight border-b border-[var(--c-rule)]" aria-labelledby="latest-heading">
+    <section className="section" aria-labelledby="latest-heading">
       <div className="wrap">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-          <h2 id="latest-heading" className="font-display text-[1.7rem] font-semibold tracking-[-0.01em] sm:text-[2rem]">
+        <div className="section-head">
+          <h2 id="latest-heading" className="section-title">
             {t.latest.heading}
           </h2>
           <p className="label">{fill(t.latest.uploaded, { date: formatDate(latestDate, locale) })}</p>
         </div>
 
-        <ul className="register mask-in mask-1 mt-4">
+        <ul className="register mt-4">
           {resources.map((resource) => (
             <li key={resource.id}>
               <ResourceCard resource={resource} />
@@ -36,7 +35,7 @@ export default function LatestResources({ resources, latestDate }: LatestResourc
           ))}
         </ul>
 
-        <p className="mt-4 text-sm">
+        <p className="section-foot">
           <Link href="/browse" className="link-spot">
             {t.latest.viewAll}
           </Link>
