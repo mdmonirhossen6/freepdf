@@ -32,7 +32,7 @@
   --c-band: #ede7da;
   --c-fg: #1b1a17;
   --c-fg-muted: #565149;
-  --c-fg-subtle: #7c766a;
+  --c-fg-subtle: #6b6457;
   --c-rule: rgb(27 26 23 / 0.13);
   --c-rule-strong: rgb(27 26 23 / 0.32);
   --c-spot: #b3261e;
@@ -233,8 +233,7 @@ button {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 500;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   line-height: 1.3;
   color: var(--c-fg-muted);
   background: none;
@@ -336,8 +335,7 @@ button {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 500;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   line-height: 1.2;
   padding: 0.5rem 0.65rem;
   border-left: 1px solid var(--c-rule);
@@ -411,8 +409,7 @@ button {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 500;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   cursor: pointer;
   white-space: nowrap;
   transition: background-color 140ms ease, color 140ms ease;
@@ -584,6 +581,10 @@ button {
   border-bottom: 1px solid var(--c-rule);
 }
 
+.section-flush {
+  padding-top: 0;
+}
+
 .section-head {
   display: flex;
   flex-wrap: wrap;
@@ -620,7 +621,7 @@ button {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 500;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--c-fg-subtle);
 }
@@ -836,8 +837,7 @@ button {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   line-height: 1.3;
   color: var(--c-fg-muted);
   text-decoration: none;
@@ -938,8 +938,7 @@ button {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 500;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   white-space: nowrap;
   color: var(--c-fg-subtle);
   text-decoration: none;
@@ -1103,8 +1102,9 @@ button {
 }
 
 .track-count small {
-  font-size: 0.625rem;
-  letter-spacing: 0.04em;
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  letter-spacing: 0;
   color: var(--c-fg-subtle);
 }
 

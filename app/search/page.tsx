@@ -84,9 +84,7 @@ function SearchInner() {
   };
 
   const clearAll = () => {
-    setInput('');
-    setDebounced('');
-    router.replace('/search', { scroll: false });
+    pushUrl({ type: '', category: '' });
   };
 
   return (
@@ -106,7 +104,7 @@ function SearchInner() {
               type="search"
               value={input}
               onChange={(event) => setInput(event.target.value)}
-              placeholder={t.search.query}
+              placeholder={t.search.placeholder}
               aria-label={t.search.query}
             />
             <button type="submit" className="field-button">
@@ -146,7 +144,9 @@ function SearchInner() {
 
       <div className="result-bar">
         <span className="num text-[1.05rem]">{fmt(result.total)}</span>
-        <span className="text-[var(--c-fg-muted)]">{t.search.results}</span>
+        <span className="text-[var(--c-fg-muted)]">
+          {result.total === 1 ? t.search.resultOne : t.search.results}
+        </span>
         {urlQuery && (
           <span className="font-mono text-[0.8125rem] text-[var(--c-fg-subtle)]">&ldquo;{urlQuery}&rdquo;</span>
         )}

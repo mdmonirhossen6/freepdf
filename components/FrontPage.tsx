@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRecentSearches } from '@/components/RecentSearches';
@@ -10,15 +10,6 @@ import { RESOURCES, TOTAL_RESOURCES, LATEST_RESOURCE_DATE } from '@/lib/generate
 import { CATEGORY_META } from '@/lib/categories';
 import { formatDate } from '@/components/ResourceCard';
 import { ArrowUpRight, MagnifyingGlass } from '@/components/icons';
-
-const PLACEHOLDERS = [
-  'Search by book, subject or topic',
-  'ACS Chemistry 2nd Paper',
-  'রসায়ন ২য় পত্র',
-  'মেডিকেল ভর্তি প্রশ্নব্যাংক',
-  'ইঞ্জিনিয়ারিং ভর্তি',
-  'কারেন্ট অ্যাফেয়ার্স সেপ্টেম্বর',
-];
 
 const SHORTCUTS = ['রসায়ন ২য় পত্র', 'জোবায়ের সিরিজ', 'মেডিকেল ভর্তি', 'BCS Preliminary', 'Udvash Solution'];
 
@@ -30,14 +21,7 @@ const SHORTCUTS = ['রসায়ন ২য় পত্র', 'জোবায
 export default function FrontPage({ total }: { total: number }) {
   const router = useRouter();
   const { t, fmt, locale } = useLang();
-  const [pointer, setPointer] = useState(0);
   const { recent, add } = useRecentSearches();
-
-  useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const id = window.setInterval(() => setPointer((value) => (value + 1) % PLACEHOLDERS.length), 4500);
-    return () => window.clearInterval(id);
-  }, []);
 
   const shortcuts = useMemo(
     () =>
@@ -83,7 +67,7 @@ export default function FrontPage({ total }: { total: number }) {
                 name="q"
                 type="search"
                 autoComplete="off"
-                placeholder={PLACEHOLDERS[pointer]}
+                placeholder={t.hero.placeholder}
                 className="text-[var(--c-fg)] placeholder:text-[var(--c-fg-subtle)]"
               />
               <button type="submit" className="field-button">

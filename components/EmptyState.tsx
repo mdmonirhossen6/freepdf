@@ -37,7 +37,7 @@ export default function EmptyState({ query }: { query: string }) {
 
         <div className="mt-5 flex flex-wrap gap-3">
           <Link href="/search" className="btn-line btn-sm">
-            {t.search.clear}
+            {t.empty.startOver}
           </Link>
           <Link href="/browse" className="btn-line btn-sm">
             {t.empty.browseAll}

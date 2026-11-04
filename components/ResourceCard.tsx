@@ -96,10 +96,14 @@ export default function ResourceCard({ resource, category }: ResourceCardProps) 
             className="resource-action resource-action-strong"
           >
             {t.card.open}
-            <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
+            <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
           </a>
           <button type="button" className="resource-action" onClick={copy} aria-label={t.card.copyAria}>
-            {copied ? <Check className="h-3 w-3" aria-hidden="true" /> : <Copy className="h-3 w-3" aria-hidden="true" />}
+            {copied ? (
+              <Check className="h-3.5 w-3.5" aria-hidden="true" />
+            ) : (
+              <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+            )}
             {copied ? t.card.copied : t.card.copy}
           </button>
         </div>

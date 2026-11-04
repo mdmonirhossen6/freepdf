@@ -38,7 +38,11 @@ export default function BrowsePage() {
     if (!jumpTo) return;
     const target = document.getElementById(`month-${jumpTo}`);
     if (!target) return;
+    const root = document.documentElement;
+    const previous = root.style.scrollBehavior;
+    root.style.scrollBehavior = 'auto';
     target.scrollIntoView({ block: 'start' });
+    root.style.scrollBehavior = previous;
     setJumpTo(null);
   }, [jumpTo, visible]);
 
@@ -59,7 +63,7 @@ export default function BrowsePage() {
           <p className="page-lede">{fill(t.browse.subtitle, { count: fmt(TOTAL_RESOURCES) })}</p>
         </header>
 
-        <nav className="mb-8" aria-label={t.browse.jump}>
+        <nav className="mb-6" aria-label={t.browse.jump}>
           <p className="label mb-2">{t.browse.jump}</p>
           <div className="month-nav">
             {MONTHS.map((month) => (
@@ -90,7 +94,7 @@ export default function BrowsePage() {
                     {formatDate(group.date, locale)}
                   </h2>
                   <span className="date-count">
-                    {fmt(group.items.length)} {t.browse.items}
+                    {fmt(group.items.length)} {group.items.length === 1 ? t.browse.itemOne : t.browse.items}
                   </span>
                 </div>
                 <ul className="register">

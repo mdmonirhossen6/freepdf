@@ -29,7 +29,10 @@ export default function Bento({ categories, heading }: BentoProps) {
   }
 
   return (
-    <section className="section" aria-labelledby={heading === false ? undefined : 'bento-heading'}>
+    <section
+      className={`section${heading === false ? ' section-flush' : ''}`}
+      aria-labelledby={heading === false ? undefined : 'bento-heading'}
+    >
       <div className="wrap">
         {heading !== false && (
           <div className="section-head">
