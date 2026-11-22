@@ -1,0 +1,9 @@
+node_modules
+.next
+out
+.git
+.env
+.env*.local
+bot/data/index.json
+bot/data/index.json.tmp
+*.log

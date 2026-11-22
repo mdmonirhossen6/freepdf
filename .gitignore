@@ -5,7 +5,11 @@ out/
 tmp/
 next-env.d.ts
 *.tsbuildinfo
+.env
 .env*.local
+!.env.example
+bot/data/index.json
+bot/data/index.json.tmp
 .DS_Store
 .vercel
 npm-debug.log*

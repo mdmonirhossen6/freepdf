@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: hscfreepdf-ai-bot
+    runtime: docker
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash-lite
+      - key: CHANNEL_ID
+        value: "@hscfreepdf"
+      - key: CHANNEL_USERNAME
+        value: hscfreepdf
+      - key: DELIVERY_MODE
+        value: link
+      - key: AUTO_INDEX
+        value: "false"
+      - key: AUTO_FORWARD_DM
+        value: "true"
+      - key: DISCUSSION_GROUP_ID
+        value: "-1004493103381"
+      - key: FORWARD_DM_BOT_REPLY
+        value: "true"
