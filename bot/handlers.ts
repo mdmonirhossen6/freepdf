@@ -1,7 +1,8 @@
 import { InputFile, InlineKeyboard, type Bot, type Context } from 'grammy';
 
-import type { PdfAiEngine } from './ai.ts';
+import { fallbackLocalSearch, type PdfAiEngine } from './ai.ts';
 import type { BotConfig } from './config.ts';
+import type { BotStateStore, PromoConfig } from './state.ts';
 import type { ResourceStore } from './store.ts';
 import type { BotResource, ConversationContext } from './types.ts';
 
@@ -37,6 +38,7 @@ function buildLinkModeKeyboard(
   bestItem: BotResource | undefined,
   similarItems: BotResource[],
   channelUsername: string,
+  promo?: PromoConfig | null,
 ): InlineKeyboard {
   const kb = new InlineKeyboard();
   if (bestItem) {
@@ -46,7 +48,10 @@ function buildLinkModeKeyboard(
     kb.url(`${typeEmoji(item)} ${truncateLabel(item.title)}`, item.telegramUrl).row();
   }
   if (!bestItem && similarItems.length === 0) {
-    kb.url(`📢 Browse @${channelUsername}`, `https://t.me/${channelUsername}`);
+    kb.url(`📢 Browse @${channelUsername}`, `https://t.me/${channelUsername}`).row();
+  }
+  if (promo?.buttonText && promo?.buttonUrl) {
+    kb.url(`✨ ${promo.buttonText}`, promo.buttonUrl);
   }
   return kb;
 }
@@ -55,6 +60,7 @@ function formatLinkResultCard(
   bestItem: BotResource | undefined,
   similarItems: BotResource[],
   replyText: string,
+  promo?: PromoConfig | null,
 ): string {
   const lines: string[] = [];
   if (replyText) {
@@ -70,6 +76,11 @@ function formatLinkResultCard(
   if (similarItems.length > 0) {
     lines.push('');
     lines.push(bestItem ? '📚 <b>Similar PDFs (tap to open):</b>' : '📚 <b>Closest PDFs (tap to open):</b>');
+  }
+  if (promo?.text) {
+    lines.push('');
+    lines.push(`───────────────`);
+    lines.push(`📣 ${escapeHtml(promo.text)}`);
   }
   return lines.join('\n').trim();
 }
@@ -102,6 +113,7 @@ export function registerHandlers(
   bot: Bot,
   config: BotConfig,
   store: ResourceStore,
+  state: BotStateStore,
   ai: PdfAiEngine,
 ): void {
   const userCooldowns = new Map<number, number>();
@@ -116,12 +128,13 @@ export function registerHandlers(
   };
 
   const checkCooldown = (userId: number | undefined): number => {
-    if (!userId || config.cooldownSeconds <= 0) return 0;
-    if (config.adminUserIds.has(userId)) return 0;
+    const cooldownSec = state.getSettings().cooldownSeconds;
+    if (!userId || cooldownSec <= 0) return 0;
+    if (state.isAdmin(userId)) return 0;
     const now = Date.now();
     const prev = userCooldowns.get(userId) ?? 0;
     const elapsedMs = now - prev;
-    const waitMs = config.cooldownSeconds * 1000 - elapsedMs;
+    const waitMs = cooldownSec * 1000 - elapsedMs;
     if (waitMs > 0) return Math.ceil(waitMs / 1000);
 
     userCooldowns.set(userId, now);
@@ -191,31 +204,34 @@ export function registerHandlers(
   };
 
   const forwardDmToDiscussionGroup = async (ctx: Context): Promise<number | null> => {
-    if (!config.autoForwardDm || !config.discussionGroupId) return null;
+    const settings = state.getSettings();
+    if (!settings.autoForwardDm || !settings.discussionGroupId) return null;
     if (ctx.chat?.type !== 'private' || !ctx.message) return null;
 
     const dmChatId = ctx.chat.id;
     const msgId = ctx.message.message_id;
+    const senderName = ctx.from
+      ? `${ctx.from.first_name}${ctx.from.last_name ? ` ${ctx.from.last_name}` : ''}${ctx.from.username ? ` (@${ctx.from.username})` : ''}`
+      : `User ${dmChatId}`;
 
     try {
-      const forwarded = await ctx.api.forwardMessage(config.discussionGroupId, dmChatId, msgId);
+      const forwarded = await ctx.api.forwardMessage(settings.discussionGroupId, dmChatId, msgId);
+      state.recordDmForward(forwarded.message_id, dmChatId, msgId, senderName);
       console.log(
-        `[FORWARD] DM from ${ctx.from?.username ? `@${ctx.from.username}` : ctx.from?.first_name ?? dmChatId} -> discussion group ${config.discussionGroupId} (msg #${forwarded.message_id})`,
+        `[FORWARD] DM from ${ctx.from?.username ? `@${ctx.from.username}` : ctx.from?.first_name ?? dmChatId} -> discussion group ${settings.discussionGroupId} (msg #${forwarded.message_id})`,
       );
       return forwarded.message_id;
     } catch (err) {
       console.warn('[FORWARD] forwardMessage failed, trying text relay:', err);
       const text = ctx.message.text?.trim();
       if (!text) return null;
-      const sender = ctx.from
-        ? `${ctx.from.first_name}${ctx.from.last_name ? ` ${ctx.from.last_name}` : ''}${ctx.from.username ? ` (@${ctx.from.username})` : ''}`
-        : `User ${dmChatId}`;
       try {
         const relayed = await ctx.api.sendMessage(
-          config.discussionGroupId,
-          `💬 <b>Message to Bot from ${escapeHtml(sender)}:</b>\n${escapeHtml(text)}`,
+          settings.discussionGroupId,
+          `💬 <b>Message to Bot from ${escapeHtml(senderName)}:</b>\n${escapeHtml(text)}`,
           { parse_mode: 'HTML' },
         );
+        state.recordDmForward(relayed.message_id, dmChatId, msgId, senderName);
         return relayed.message_id;
       } catch (relayErr) {
         console.error('[FORWARD] Could not forward DM to discussion group:', relayErr);
@@ -233,6 +249,18 @@ export function registerHandlers(
     const msg = ctx.message;
     if (!chat || !msg) return;
     if (!isGroupAllowed(chat.id, chat.type)) return;
+    if (state.isBanned(ctx.from?.id)) return;
+
+    const settings = state.getSettings();
+    if (settings.maintenance && !state.isAdmin(ctx.from?.id)) {
+      await ctx.reply('🛠 বটটি বর্তমানে মেইনটেনেন্সে আছে, কিছুক্ষণ পর আবার চেষ্টা করো।', {
+        reply_parameters: { message_id: msg.message_id },
+      });
+      return;
+    }
+
+    state.trackUser(ctx.from, { isDm: chat.type === 'private', isSearch: true });
+    state.trackGroup(chat);
 
     const trimmed = query.trim();
     if (!trimmed) {
@@ -260,7 +288,9 @@ export function registerHandlers(
 
     await ctx.api.sendChatAction(chat.id, 'typing').catch(() => {});
 
-    const decision = await ai.search(trimmed, store.getAll(), replyContext);
+    const decision = settings.aiEnabled
+      ? await ai.search(trimmed, store.getAll(), replyContext)
+      : fallbackLocalSearch(trimmed, store.getAll(), config.maxSimilarButtons);
 
     if (!decision.isPdfRequest) {
       const sent = await ctx.reply(decision.replyText, {
@@ -268,9 +298,9 @@ export function registerHandlers(
       });
       scheduleAutoDelete(chat.id, sent.message_id);
 
-      if (config.forwardDmBotReply && config.discussionGroupId && forwardedGroupMsgId) {
+      if (settings.forwardDmBotReply && settings.discussionGroupId && forwardedGroupMsgId) {
         await ctx.api
-          .sendMessage(config.discussionGroupId, decision.replyText, {
+          .sendMessage(settings.discussionGroupId, decision.replyText, {
             reply_parameters: { message_id: forwardedGroupMsgId },
           })
           .catch((err) => console.warn('[FORWARD] Could not mirror AI reply to group:', err));
@@ -278,6 +308,7 @@ export function registerHandlers(
       return;
     }
 
+    const promo = state.consumePromoIfDue();
     const bestItem = decision.bestMatchId ? store.get(decision.bestMatchId) : undefined;
     const similarItems = decision.similarIds
       .map((id) => store.get(id))
@@ -295,8 +326,8 @@ export function registerHandlers(
       // Link mode (works with zero channel admin rights — uses your CSV index directly!).
       // If a cached Telegram fileId exists for this item, send the file directly anyway.
       if (config.deliveryMode === 'link' && !bestItem.fileId) {
-        const keyboard = buildLinkModeKeyboard(bestItem, similarItems, config.channelUsername);
-        const card = formatLinkResultCard(bestItem, similarItems, decision.replyText);
+        const keyboard = buildLinkModeKeyboard(bestItem, similarItems, config.channelUsername, promo);
+        const card = formatLinkResultCard(bestItem, similarItems, decision.replyText, promo);
         const sent = await ctx.reply(card, {
           parse_mode: 'HTML',
           link_preview_options: { is_disabled: true },
@@ -306,9 +337,9 @@ export function registerHandlers(
         saveReplyContext(chat.id, sent.message_id, newContext);
         scheduleAutoDelete(chat.id, sent.message_id);
 
-        if (config.forwardDmBotReply && config.discussionGroupId && forwardedGroupMsgId) {
+        if (settings.forwardDmBotReply && settings.discussionGroupId && forwardedGroupMsgId) {
           const mirrored = await ctx.api
-            .sendMessage(config.discussionGroupId, card, {
+            .sendMessage(settings.discussionGroupId, card, {
               parse_mode: 'HTML',
               link_preview_options: { is_disabled: true },
               reply_parameters: { message_id: forwardedGroupMsgId },
@@ -319,7 +350,7 @@ export function registerHandlers(
               return null;
             });
           if (mirrored) {
-            saveReplyContext(config.discussionGroupId, mirrored.message_id, newContext);
+            saveReplyContext(settings.discussionGroupId, mirrored.message_id, newContext);
           }
         }
         return;
@@ -328,7 +359,7 @@ export function registerHandlers(
       await ctx.api.sendChatAction(chat.id, 'upload_document').catch(() => {});
 
       if (bestItem.fileId) {
-        const keyboard = buildLinkModeKeyboard(undefined, similarItems, config.channelUsername);
+        const keyboard = buildLinkModeKeyboard(undefined, similarItems, config.channelUsername, promo);
         try {
           const sentDoc = await ctx.api.sendDocument(chat.id, bestItem.fileId, {
             caption: `${decision.replyText}\n\n📄 ${bestItem.title}`,
@@ -356,8 +387,8 @@ export function registerHandlers(
       } catch (err) {
         console.error(`[SEND] copyMessage failed for #${bestItem.id}:`, err);
         // Fallback: share clean link card + 1-tap similar buttons if bot is not channel admin.
-        const fallbackKb = buildLinkModeKeyboard(bestItem, similarItems, config.channelUsername);
-        const card = formatLinkResultCard(bestItem, similarItems, decision.replyText);
+        const fallbackKb = buildLinkModeKeyboard(bestItem, similarItems, config.channelUsername, promo);
+        const card = formatLinkResultCard(bestItem, similarItems, decision.replyText, promo);
         const sent = await ctx.reply(card, {
           parse_mode: 'HTML',
           link_preview_options: { is_disabled: true },
@@ -373,7 +404,7 @@ export function registerHandlers(
     // No exact match — reply with AI guidance + inline buttons for similar PDFs (if any).
     const keyboard =
       config.deliveryMode === 'link'
-        ? buildLinkModeKeyboard(undefined, similarItems, config.channelUsername)
+        ? buildLinkModeKeyboard(undefined, similarItems, config.channelUsername, promo)
         : similarItems.length > 0
           ? buildSimilarKeyboard(similarItems, config.channelUsername)
           : new InlineKeyboard().url(
@@ -383,7 +414,7 @@ export function registerHandlers(
 
     const textBody =
       config.deliveryMode === 'link'
-        ? formatLinkResultCard(undefined, similarItems, decision.replyText)
+        ? formatLinkResultCard(undefined, similarItems, decision.replyText, promo)
         : decision.replyText;
 
     const sent = await ctx.reply(textBody, {
@@ -395,9 +426,9 @@ export function registerHandlers(
     saveReplyContext(chat.id, sent.message_id, newContext);
     scheduleAutoDelete(chat.id, sent.message_id);
 
-    if (config.forwardDmBotReply && config.discussionGroupId && forwardedGroupMsgId) {
+    if (settings.forwardDmBotReply && settings.discussionGroupId && forwardedGroupMsgId) {
       const mirrored = await ctx.api
-        .sendMessage(config.discussionGroupId, textBody, {
+        .sendMessage(settings.discussionGroupId, textBody, {
           ...(config.deliveryMode === 'link' ? { parse_mode: 'HTML' as const } : {}),
           link_preview_options: { is_disabled: true },
           reply_parameters: { message_id: forwardedGroupMsgId },
@@ -408,7 +439,7 @@ export function registerHandlers(
           return null;
         });
       if (mirrored) {
-        saveReplyContext(config.discussionGroupId, mirrored.message_id, newContext);
+        saveReplyContext(settings.discussionGroupId, mirrored.message_id, newContext);
       }
     }
   };
@@ -438,21 +469,27 @@ export function registerHandlers(
   /* ------------------------------------------------------------------ */
   bot.command('start', async (ctx) => {
     if (!isGroupAllowed(ctx.chat.id, ctx.chat.type)) return;
+    if (state.isBanned(ctx.from?.id)) return;
+    state.trackUser(ctx.from, { isDm: ctx.chat.type === 'private' });
+    state.trackGroup(ctx.chat);
     const stats = store.getStats();
     const botUser = ctx.me.username;
+    const isAdmin = state.isAdmin(ctx.from?.id);
     await ctx.reply(
       `আসসালামু আলাইকুম! আমি @${config.channelUsername} এর AI PDF Search Bot।\n\n` +
         `📚 চ্যানেলে বর্তমানে *${stats.pdfCount}টি PDF* (মোট ${stats.total}টি পোস্ট) ইনডেক্স করা আছে।\n\n` +
         `*যেভাবে খুঁজবে:*\n` +
         `• গ্রুপে: \`/pdf বইয়ের নাম\` অথবা \`@${botUser} বইয়ের নাম\`\n` +
         `• ফলো-আপ: বটের মেসেজে Reply করে বলো (যেমন: _"১ম পত্রটা দাও"_)\n` +
-        `• ইনবক্সে: সরাসরি বইয়ের নাম লিখে পাঠাও!`,
+        `• ইনবক্সে: সরাসরি বইয়ের নাম লিখে পাঠাও!` +
+        (isAdmin ? `\n\n👑 Admin detected — run \`/admin\` to open your control panel.` : ''),
       { parse_mode: 'Markdown' },
     );
   });
 
   bot.command('help', async (ctx) => {
     if (!isGroupAllowed(ctx.chat.id, ctx.chat.type)) return;
+    if (state.isBanned(ctx.from?.id)) return;
     const botUser = ctx.me.username;
     await ctx.reply(
       `*PDF খোঁজার উদাহরণ:*\n` +
@@ -473,35 +510,32 @@ export function registerHandlers(
 
   bot.command('stats', async (ctx) => {
     if (!isGroupAllowed(ctx.chat.id, ctx.chat.type)) return;
+    if (state.isBanned(ctx.from?.id)) return;
     const stats = store.getStats();
+    const summary = state.getSummary();
+    const s = summary.settings;
     await ctx.reply(
       `📊 *Bot Status (@${config.channelUsername})*\n` +
         `• Indexed Posts: ${stats.total}\n` +
         `• PDFs: ${stats.pdfCount}\n` +
         `• Latest Post: #${stats.newestId} (${stats.newestDate})\n` +
-        `• AI Engine: ${ai.isEnabled() ? `Gemini (${config.geminiModel})` : 'Local Fallback'}\n` +
+        `• Total Searches: ${summary.totalSearches} | Users: ${summary.totalUsers}\n` +
+        `• AI Engine: ${s.aiEnabled && ai.isEnabled() ? `Gemini (${config.geminiModel})` : 'Local Search'}\n` +
         `• Mode: ${config.deliveryMode === 'copy' ? 'Direct Copy (Channel Admin)' : 'CSV Index + 1-Tap Channel Links'}\n` +
-        `• DM Auto-Forward: ${config.autoForwardDm && config.discussionGroupId ? `ON → ${config.discussionGroupId}` : 'OFF'}\n` +
+        `• DM Auto-Forward: ${s.autoForwardDm && s.discussionGroupId ? `ON → ${s.discussionGroupId}` : 'OFF'}\n` +
         `• Realtime Auto-Index: ${config.autoIndex ? 'ON' : 'OFF (CSV snapshot)'}`,
       { parse_mode: 'Markdown' },
     );
-  });
-
-  bot.command('exportindex', async (ctx) => {
-    const userId = ctx.from?.id;
-    if (!userId || !config.adminUserIds.has(userId)) {
-      return;
-    }
-    const stats = store.getStats();
-    await ctx.replyWithDocument(new InputFile(store.getIndexPath(), 'index.json'), {
-      caption: `Index export | Total: ${stats.total} | PDFs: ${stats.pdfCount} | Updated: ${stats.updatedAt}`,
-    });
   });
 
   /* ------------------------------------------------------------------ */
   /* Similar PDF inline button clicks                                    */
   /* ------------------------------------------------------------------ */
   bot.callbackQuery(/^pdf:(\d+)$/, async (ctx) => {
+    if (state.isBanned(ctx.from?.id)) {
+      await ctx.answerCallbackQuery({ text: '⛔ Access denied.' });
+      return;
+    }
     const id = ctx.match[1];
     const chat = ctx.chat;
     if (!chat) {

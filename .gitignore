@@ -10,6 +10,8 @@ next-env.d.ts
 !.env.example
 bot/data/index.json
 bot/data/index.json.tmp
+bot/data/state.json
+bot/data/state.json.tmp
 .DS_Store
 .vercel
 npm-debug.log*

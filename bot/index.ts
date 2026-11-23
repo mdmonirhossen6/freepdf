@@ -5,23 +5,29 @@ import { Bot } from 'grammy';
 // Prevents Windows / ISP IPv6 hangs when connecting to api.telegram.org.
 dns.setDefaultResultOrder('ipv4first');
 
+import { registerAdminHandlers } from './admin.ts';
 import { PdfAiEngine } from './ai.ts';
 import { loadConfig } from './config.ts';
 import { registerHandlers } from './handlers.ts';
+import { BotStateStore } from './state.ts';
 import { ResourceStore } from './store.ts';
 
 async function main(): Promise<void> {
   const config = loadConfig({ requireTelegram: true });
   const store = new ResourceStore(config.indexPath, config.channelUsername);
   const { seeded, stats } = store.init();
+  const state = new BotStateStore(config);
+  state.init();
 
   console.log('──────────────────────────────────────────────');
   console.log(`FreePDF AI Bot — @${config.channelUsername}`);
   console.log('──────────────────────────────────────────────');
   console.log(`Index path : ${config.indexPath} (${seeded ? 'freshly seeded' : 'loaded'})`);
+  console.log(`State path : ${config.statePath} (${state.getSummary().totalUsers} users)`);
   console.log(`Resources  : ${stats.total} total (${stats.pdfCount} PDFs) | latest #${stats.newestId} (${stats.newestDate})`);
   console.log(`AI Engine  : ${config.geminiApiKey ? `Gemini (${config.geminiModel})` : 'DISABLED (using local fallback)'}`);
   console.log(`Delivery   : ${config.deliveryMode} | Realtime auto-index: ${config.autoIndex ? 'ON' : 'OFF (CSV snapshot)'}`);
+  console.log(`UltraAdmin : ${state.getUltraAdminIds().join(', ')}`);
   console.log(
     `Groups     : ${config.allowedGroupIds.size > 0 ? [...config.allowedGroupIds].join(', ') : 'All groups allowed'}`,
   );
@@ -29,26 +35,29 @@ async function main(): Promise<void> {
   const ai = new PdfAiEngine(config);
   const bot = new Bot(config.telegramBotToken);
 
-  // Auto-discover linked discussion group ID from the channel if not explicitly set in .env.
-  if (config.autoForwardDm && !config.discussionGroupId) {
+  // Auto-discover linked discussion group ID from the channel if not explicitly set.
+  const currentSettings = state.getSettings();
+  if (currentSettings.autoForwardDm && !currentSettings.discussionGroupId) {
     try {
       const channelInfo = await bot.api.getChat(config.channelId);
       if ('linked_chat_id' in channelInfo && typeof channelInfo.linked_chat_id === 'number') {
-        config.discussionGroupId = channelInfo.linked_chat_id;
-        console.log(`Discussion : Auto-detected linked group ${config.discussionGroupId}`);
+        state.updateSettings({ discussionGroupId: channelInfo.linked_chat_id });
+        console.log(`Discussion : Auto-detected linked group ${channelInfo.linked_chat_id}`);
       }
     } catch (err) {
       console.warn('[BOT] Could not auto-detect linked discussion group:', err);
     }
-  } else if (config.autoForwardDm && config.discussionGroupId) {
-    console.log(`Discussion : Auto-forwarding DM text -> ${config.discussionGroupId}`);
+  } else if (currentSettings.autoForwardDm && currentSettings.discussionGroupId) {
+    console.log(`Discussion : Auto-forwarding DM text -> ${currentSettings.discussionGroupId}`);
   }
 
   bot.catch((err) => {
     console.error(`[BOT ERROR] update ${err.ctx.update.update_id}:`, err.error);
   });
 
-  registerHandlers(bot, config, store, ai);
+  // Register admin / ultra-admin commands before general handlers.
+  registerAdminHandlers(bot, config, store, state, ai);
+  registerHandlers(bot, config, store, state, ai);
 
   // Register convenient slash commands in Telegram's command menu.
   await bot.api
@@ -64,12 +73,17 @@ async function main(): Promise<void> {
   const server = createServer((req, res) => {
     if (req.url === '/health' || req.url === '/') {
       const current = store.getStats();
+      const summary = state.getSummary();
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end(
         JSON.stringify({
           ok: true,
           channel: config.channelUsername,
-          ai: ai.isEnabled() ? config.geminiModel : 'local-fallback',
+          ai: summary.settings.aiEnabled && ai.isEnabled() ? config.geminiModel : 'local-fallback',
+          users: summary.totalUsers,
+          searches: summary.totalSearches,
+          promoActive: summary.promoEnabled,
+          maintenance: summary.settings.maintenance,
           ...current,
         }),
       );
@@ -88,6 +102,7 @@ async function main(): Promise<void> {
 
   const shutdown = (signal: string) => {
     console.log(`\n[BOT] Received ${signal}, shutting down gracefully...`);
+    state.saveNow();
     server.close();
     bot.stop();
   };

@@ -25,3 +25,5 @@ services:
         value: "-1004493103381"
       - key: FORWARD_DM_BOT_REPLY
         value: "true"
+      - key: ULTRA_ADMIN_IDS
+        value: "6885443469"

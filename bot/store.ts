@@ -391,6 +391,55 @@ export class ResourceStore {
     return resource;
   }
 
+  /** Allows Ultra Admin to manually index a channel post live without redeploying. */
+  addManualResource(id: string, rawTitle: string, sourceType = 'PDF'): BotResource {
+    const cleanId = id.trim();
+    const date = new Date().toISOString().slice(0, 10);
+    const type = typeBucketFor(sourceType);
+    const cleaned = cleanTitle(rawTitle).title || rawTitle.trim();
+    const normalizedTitle = normalizeText(cleaned);
+    const categories = inferCategories(cleaned, type);
+    const titleTokens = tokenize(normalizedTitle);
+    const searchTokens = Array.from(
+      new Set([
+        ...titleTokens,
+        ...conceptTokensFor(normalizedTitle, titleTokens),
+        ...tokenize(normalizeText(sourceType)),
+      ]),
+    );
+
+    const resource: BotResource = {
+      id: cleanId,
+      title: cleaned,
+      rawTitle: rawTitle.trim(),
+      normalizedTitle,
+      date,
+      type,
+      typeLabel: sourceType,
+      category: categories[0] as ResourceCategory,
+      categories,
+      telegramUrl: `https://t.me/${this.channelUsername}/${cleanId}`,
+      description: buildDescription(rawTitle, normalizedTitle),
+      searchTokens,
+      years: extractYearTokens(normalizeText(rawTitle)),
+      genericTitle: false,
+      derivedFromId: null,
+    };
+
+    this.byId.set(cleanId, resource);
+    this.rebuildList();
+    this.save();
+    return resource;
+  }
+
+  /** Removes a post from the live index (Ultra Admin). */
+  deleteById(id: string): boolean {
+    if (!this.byId.delete(id.trim())) return false;
+    this.rebuildList();
+    this.save();
+    return true;
+  }
+
   get(id: string): BotResource | undefined {
     return this.byId.get(id);
   }

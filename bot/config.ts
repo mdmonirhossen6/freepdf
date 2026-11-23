@@ -28,9 +28,14 @@ export interface BotConfig {
   autoForwardDm: boolean;
   forwardDmBotReply: boolean;
   allowedGroupIds: Set<number>;
+  ultraAdminIds: Set<number>;
   adminUserIds: Set<number>;
   backupChatId: string | null;
   indexPath: string;
+  statePath: string;
+  defaultPromoText?: string;
+  defaultPromoButtonText?: string;
+  defaultPromoButtonUrl?: string;
   cooldownSeconds: number;
   maxSimilarButtons: number;
   port: number;
@@ -79,6 +84,13 @@ export function loadConfig(options: { requireTelegram?: boolean } = {}): BotConf
   const indexPath = process.env.INDEX_PATH?.trim()
     ? resolve(REPO_ROOT, process.env.INDEX_PATH.trim())
     : defaultIndexPath;
+  const statePath = process.env.STATE_PATH?.trim()
+    ? resolve(REPO_ROOT, process.env.STATE_PATH.trim())
+    : resolve(dirname(indexPath), 'state.json');
+
+  // Default Ultra Admin: @md_monir01 (6885443469), overridable/extensible via ULTRA_ADMIN_IDS.
+  const ultraAdminIds = parseIdSet(process.env.ULTRA_ADMIN_IDS ?? '6885443469');
+  if (ultraAdminIds.size === 0) ultraAdminIds.add(6885443469);
 
   const parsedCooldown = Number(process.env.COOLDOWN_SECONDS);
   const cooldownSeconds =
@@ -123,9 +135,14 @@ export function loadConfig(options: { requireTelegram?: boolean } = {}): BotConf
     autoForwardDm,
     forwardDmBotReply,
     allowedGroupIds: parseIdSet(process.env.ALLOWED_GROUP_IDS),
+    ultraAdminIds,
     adminUserIds: parseIdSet(process.env.ADMIN_USER_IDS),
     backupChatId: process.env.BACKUP_CHAT_ID?.trim() || null,
     indexPath,
+    statePath,
+    defaultPromoText: process.env.DEFAULT_PROMO_TEXT?.trim() || undefined,
+    defaultPromoButtonText: process.env.DEFAULT_PROMO_BTN_TEXT?.trim() || undefined,
+    defaultPromoButtonUrl: process.env.DEFAULT_PROMO_BTN_URL?.trim() || undefined,
     cooldownSeconds,
     maxSimilarButtons,
     port,

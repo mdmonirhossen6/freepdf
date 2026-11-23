@@ -6,4 +6,6 @@ out
 .env*.local
 bot/data/index.json
 bot/data/index.json.tmp
+bot/data/state.json
+bot/data/state.json.tmp
 *.log
