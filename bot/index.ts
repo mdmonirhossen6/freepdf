@@ -9,6 +9,7 @@ import { registerAdminHandlers } from './admin.ts';
 import { PdfAiEngine } from './ai.ts';
 import { loadConfig } from './config.ts';
 import { registerHandlers } from './handlers.ts';
+import { registerInlineHandlers } from './inline.ts';
 import { BotStateStore } from './state.ts';
 import { ResourceStore } from './store.ts';
 
@@ -55,8 +56,9 @@ async function main(): Promise<void> {
     console.error(`[BOT ERROR] update ${err.ctx.update.update_id}:`, err.error);
   });
 
-  // Register admin / ultra-admin commands before general handlers.
+  // Register admin / ultra-admin commands and inline search before general handlers.
   registerAdminHandlers(bot, config, store, state, ai);
+  registerInlineHandlers(bot, config, store, state);
   registerHandlers(bot, config, store, state, ai);
 
   // Register convenient slash commands in Telegram's command menu.
@@ -110,7 +112,14 @@ async function main(): Promise<void> {
   process.once('SIGTERM', () => shutdown('SIGTERM'));
 
   await bot.start({
-    allowed_updates: ['message', 'callback_query', 'channel_post', 'edited_channel_post'],
+    allowed_updates: [
+      'message',
+      'callback_query',
+      'inline_query',
+      'my_chat_member',
+      'channel_post',
+      'edited_channel_post',
+    ],
     onStart: (botInfo) => {
       console.log(`[BOT] Live as @${botInfo.username} (id=${botInfo.id})`);
       console.log('──────────────────────────────────────────────');

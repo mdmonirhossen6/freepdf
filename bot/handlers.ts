@@ -590,6 +590,38 @@ export function registerHandlers(
   });
 
   /* ------------------------------------------------------------------ */
+  /* Auto-welcome when added to any new group                            */
+  /* ------------------------------------------------------------------ */
+  bot.on('my_chat_member', async (ctx) => {
+    const chat = ctx.chat;
+    if (!chat || (chat.type !== 'group' && chat.type !== 'supergroup')) return;
+    const oldStatus = ctx.myChatMember.old_chat_member.status;
+    const newStatus = ctx.myChatMember.new_chat_member.status;
+    const justJoined =
+      (oldStatus === 'left' || oldStatus === 'kicked') &&
+      (newStatus === 'member' || newStatus === 'administrator');
+
+    if (!justJoined) return;
+    if (!isGroupAllowed(chat.id, chat.type)) return;
+
+    state.trackGroup(chat);
+    const botUser = ctx.me.username;
+    const stats = store.getStats();
+    console.log(`[GROUP] Joined new group "${chat.title}" (${chat.id})`);
+
+    await ctx.api
+      .sendMessage(
+        chat.id,
+        `আসসালামু আলাইকুম! আমি @${config.channelUsername} এর AI PDF Search Bot (${stats.pdfCount}+ PDF)।\n\n` +
+          `এই গ্রুপে যেভাবে PDF খুঁজবে:\n` +
+          `• \`/pdf@${botUser} বইয়ের নাম\` (যেমন: \`/pdf@${botUser} physics 2nd paper\`)\n` +
+          `• অথবা যেকোনো চ্যাটে Inline মোডে লিখো: \`@${botUser} বইয়ের নাম\``,
+        { parse_mode: 'Markdown' },
+      )
+      .catch(() => {});
+  });
+
+  /* ------------------------------------------------------------------ */
   /* Group @mention, reply-to-bot, and Private DM text messages          */
   /* ------------------------------------------------------------------ */
   bot.on('message:text', async (ctx) => {
