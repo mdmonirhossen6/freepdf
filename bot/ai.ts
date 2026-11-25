@@ -1,6 +1,7 @@
 import { GoogleGenAI, Type } from '@google/genai';
 
 import { relatedResources, searchAll } from '../lib/search.ts';
+import { normalizeText } from '../lib/text.ts';
 import type { BotConfig } from './config.ts';
 import type { AiQueryPlan, AiSearchDecision, BotResource, ConversationContext } from './types.ts';
 
@@ -11,12 +12,157 @@ interface RankedCandidate {
   score: number;
 }
 
+interface StrictEntityDef {
+  id: string;
+  kind: 'university' | 'class';
+  labelEn: string;
+  labelBn: string;
+  /** Aliases matched as whole words/phrases against normalized text. */
+  aliases: string[];
+}
+
+/**
+ * Distinct universities / institutions / school classes that must NEVER be faked
+ * as an exact bestMatchId when absent from the channel index.
+ * - For missing 'university' entities: say it's not available, force bestMatchId=null,
+ *   and still offer genuinely related admission/question-bank PDFs as buttons.
+ * - For missing 'class' entities (Class 6-8): say it's not available with no unrelated HSC PDFs.
+ */
+const STRICT_ENTITIES: StrictEntityDef[] = [
+  { id: 'jnu', kind: 'university', labelEn: 'JnU (Jagannath University)', labelBn: 'জগন্নাথ বিশ্ববিদ্যালয় (JnU)', aliases: ['jnu', 'jagannath', 'জগন্নাথ', 'জবি'] },
+  { id: 'hstu', kind: 'university', labelEn: 'HSTU (Hajee Danesh University)', labelBn: 'হাজী দানেশ বিশ্ববিদ্যালয় (HSTU)', aliases: ['hstu', 'haji danesh', 'haji danes', 'hajee danesh', 'hajee danes', 'hajee mohammad danesh', 'danesh', 'danes', 'হাজী দানেশ', 'হাজি দানেশ', 'হাবিপ্রবি'] },
+  { id: 'du', kind: 'university', labelEn: 'Dhaka University (DU)', labelBn: 'ঢাকা বিশ্ববিদ্যালয় (ঢাবি)', aliases: ['dhaka university', 'ঢাকা বিশ্ববিদ্যালয়', 'ঢাবি', 'du'] },
+  { id: 'ju', kind: 'university', labelEn: 'Jahangirnagar University (JU)', labelBn: 'জাহাঙ্গীরনগর বিশ্ববিদ্যালয় (জাবি)', aliases: ['jahangirnagar', 'জাহাঙ্গীরনগর', 'জাবি', 'ju'] },
+  { id: 'ru', kind: 'university', labelEn: 'Rajshahi University (RU)', labelBn: 'রাজশাহী বিশ্ববিদ্যালয় (রাবি)', aliases: ['rajshahi university', 'রাজশাহী বিশ্ববিদ্যালয়', 'রাবি', 'ru'] },
+  { id: 'cu', kind: 'university', labelEn: 'Chittagong University (CU)', labelBn: 'চট্টগ্রাম বিশ্ববিদ্যালয় (চবি)', aliases: ['chittagong university', 'চট্টগ্রাম বিশ্ববিদ্যালয়', 'চবি', 'cu'] },
+  { id: 'sust', kind: 'university', labelEn: 'SUST', labelBn: 'শাহজালাল বিশ্ববিদ্যালয় (SUST)', aliases: ['sust', 'shahjalal', 'শাহজালাল', 'সাস্ট'] },
+  { id: 'buet', kind: 'university', labelEn: 'BUET', labelBn: 'বুয়েট (BUET)', aliases: ['buet', 'বুয়েট'] },
+  { id: 'kuet', kind: 'university', labelEn: 'KUET', labelBn: 'কুয়েট (KUET)', aliases: ['kuet', 'কুয়েট'] },
+  { id: 'ruet', kind: 'university', labelEn: 'RUET', labelBn: 'রুয়েট (RUET)', aliases: ['ruet', 'রুয়েট'] },
+  { id: 'cuet', kind: 'university', labelEn: 'CUET', labelBn: 'চুয়েট (CUET)', aliases: ['cuet', 'চুয়েট'] },
+  { id: 'butex', kind: 'university', labelEn: 'BUTEX', labelBn: 'বুটেক্স (BUTEX)', aliases: ['butex', 'বুটেক্স'] },
+  { id: 'iut', kind: 'university', labelEn: 'IUT', labelBn: 'আইইউটি (IUT)', aliases: ['iut', 'আইইউটি'] },
+  { id: 'mist', kind: 'university', labelEn: 'MIST', labelBn: 'এমআইএসটি (MIST)', aliases: ['mist', 'এমআইএসটি'] },
+  { id: 'bup', kind: 'university', labelEn: 'BUP', labelBn: 'বিইউপি (BUP)', aliases: ['bup', 'বিইউপি'] },
+  { id: 'ku', kind: 'university', labelEn: 'Khulna University (KU)', labelBn: 'খুলনা বিশ্ববিদ্যালয় (খুবি)', aliases: ['khulna university', 'খুলনা বিশ্ববিদ্যালয়', 'খুবি'] },
+  { id: 'iu', kind: 'university', labelEn: 'Islamic University (IU)', labelBn: 'ইসলামী বিশ্ববিদ্যালয় (ইবি)', aliases: ['islamic university', 'ইসলামী বিশ্ববিদ্যালয়', 'ইবি'] },
+  { id: 'cou', kind: 'university', labelEn: 'Comilla University (CoU)', labelBn: 'কুমিল্লা বিশ্ববিদ্যালয় (কুবি)', aliases: ['comilla university', 'কুমিল্লা বিশ্ববিদ্যালয়', 'কুবি', 'cou'] },
+  { id: 'brur', kind: 'university', labelEn: 'Begum Rokeya University (BRUR)', labelBn: 'বেগম রোকেয়া বিশ্ববিদ্যালয় (BRUR)', aliases: ['brur', 'begum rokeya', 'বেগম রোকেয়া', 'বেরোবি'] },
+  { id: 'mbstu', kind: 'university', labelEn: 'MBSTU', labelBn: 'মাওলানা ভাসানী বিশ্ববিদ্যালয় (MBSTU)', aliases: ['mbstu', 'mawlana bhashani', 'মাভাবিপ্রবি'] },
+  { id: 'nstu', kind: 'university', labelEn: 'NSTU', labelBn: 'নোয়াখালী বিজ্ঞান ও প্রযুক্তি বিশ্ববিদ্যালয় (NSTU)', aliases: ['nstu', 'noakhali science', 'নোবিপ্রবি'] },
+  { id: 'just', kind: 'university', labelEn: 'JUST', labelBn: 'যশোর বিজ্ঞান ও প্রযুক্তি বিশ্ববিদ্যালয় (JUST)', aliases: ['yobiprobi', 'যবিপ্রবি', 'jashore university', 'jessore university'] },
+  { id: 'pstu', kind: 'university', labelEn: 'PSTU', labelBn: 'পটুয়াখালী বিজ্ঞান ও প্রযুক্তি বিশ্ববিদ্যালয় (PSTU)', aliases: ['pstu', 'patuakhali', 'পবিপ্রবি'] },
+  { id: 'bau', kind: 'university', labelEn: 'BAU', labelBn: 'বাংলাদেশ কৃষি বিশ্ববিদ্যালয় (BAU)', aliases: ['bau', 'বাকৃবি'] },
+  { id: 'sau', kind: 'university', labelEn: 'SAU', labelBn: 'শেরেবাংলা কৃষি বিশ্ববিদ্যালয় (SAU)', aliases: ['sau', 'শেকৃবি', 'sher e bangla'] },
+  { id: 'nu', kind: 'university', labelEn: 'National University (NU)', labelBn: 'জাতীয় বিশ্ববিদ্যালয় (NU)', aliases: ['national university', 'জাতীয় বিশ্ববিদ্যালয়'] },
+  { id: 'class6', kind: 'class', labelEn: 'Class 6', labelBn: 'ষষ্ঠ শ্রেণি (Class 6)', aliases: ['class 6', 'ষষ্ঠ শ্রেণি', 'ষষ্ঠ শ্রেণী'] },
+  { id: 'class7', kind: 'class', labelEn: 'Class 7', labelBn: 'সপ্তম শ্রেণি (Class 7)', aliases: ['class 7', 'সপ্তম শ্রেণি', 'সপ্তম শ্রেণী'] },
+  { id: 'class8', kind: 'class', labelEn: 'Class 8', labelBn: 'অষ্টম শ্রেণি (Class 8)', aliases: ['class 8', 'অষ্টম শ্রেণি', 'অষ্টম শ্রেণী', 'jsc', 'জেএসসি'] },
+  { id: 'class9', kind: 'class', labelEn: 'Class 9', labelBn: 'নবম শ্রেণি (Class 9)', aliases: ['class 9', 'নবম শ্রেণি', 'নবম শ্রেণী'] },
+  { id: 'class10', kind: 'class', labelEn: 'Class 10', labelBn: 'দশম শ্রেণি (Class 10)', aliases: ['class 10', 'দশম শ্রেণি', 'দশম শ্রেণী'] },
+];
+
+/**
+ * Fold text for exact entity matching while PRESERVING Bengali vowel signs (\p{M}),
+ * so words like "সমাজবিজ্ঞান" are never split into "সম জব জঞ ন" and falsely matched against "জবি".
+ */
+function entityFold(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/[\u200B-\u200F\uFEFF]/g, '')
+    .replace(/[^\p{L}\p{M}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+const NORMALIZED_STRICT_ENTITIES = STRICT_ENTITIES.map((entity) => ({
+  ...entity,
+  normalizedAliases: Array.from(new Set(entity.aliases.map((a) => entityFold(a)).filter(Boolean))),
+}));
+
+function textMatchesAlias(foldedText: string, tokenSet: Set<string>, alias: string): boolean {
+  if (alias.includes(' ')) {
+    return ` ${foldedText} `.includes(` ${alias} `);
+  }
+  return tokenSet.has(alias);
+}
+
+function detectStrictEntities(query: string): typeof NORMALIZED_STRICT_ENTITIES {
+  const folded = entityFold(query);
+  if (!folded) return [];
+  const tokenSet = new Set(folded.split(' '));
+  return NORMALIZED_STRICT_ENTITIES.filter((entity) =>
+    entity.normalizedAliases.some((alias) => textMatchesAlias(folded, tokenSet, alias)),
+  );
+}
+
+function resourceMatchesEntity(
+  resource: BotResource,
+  entity: (typeof NORMALIZED_STRICT_ENTITIES)[number],
+): boolean {
+  const haystack = entityFold(
+    `${resource.title} ${resource.filename ?? ''} ${resource.description ?? ''}`,
+  );
+  if (!haystack) return false;
+  const tokenSet = new Set(haystack.split(' '));
+  return entity.normalizedAliases.some((alias) => textMatchesAlias(haystack, tokenSet, alias));
+}
+
+function detectQueryLanguage(text: string): 'bn' | 'en' | 'banglish' {
+  if (/[\u0980-\u09FF]/.test(text)) return 'bn';
+  if (/\b(dao|lagbe|chai|er|ta|boi|proshno|kobir|tapan|topon|hazari|dagano)\b/i.test(text)) {
+    return 'banglish';
+  }
+  return 'en';
+}
+
+function formatNotFoundReply(
+  language: 'bn' | 'en' | 'banglish',
+  missingEntity?: StrictEntityDef,
+  hasRelated = false,
+): string {
+  if (missingEntity) {
+    if (language === 'en') {
+      return hasRelated
+        ? `Sorry, exact "${missingEntity.labelEn}" PDF is not in @hscfreepdf yet, but you can check these related PDFs below:`
+        : `Sorry, "${missingEntity.labelEn}" PDF is not available in @hscfreepdf right now.`;
+    }
+    if (language === 'banglish') {
+      return hasRelated
+        ? `Sorry, exact ${missingEntity.labelEn} er PDF ekhono @hscfreepdf channel e nai, tobe nicher related PDF gula dekhte paro:`
+        : `Sorry, ${missingEntity.labelEn} er kono PDF ekhono @hscfreepdf channel e nai.`;
+    }
+    return hasRelated
+      ? `দুঃখিত, সরাসরি ${missingEntity.labelBn}-এর PDF এখনো @hscfreepdf চ্যানেলে নেই, তবে নিচের কাছাকাছি PDF গুলো দেখতে পারো:`
+      : `দুঃখিত, ${missingEntity.labelBn}-এর কোনো PDF এখনো @hscfreepdf চ্যানেলে নেই।`;
+  }
+  if (language === 'en') {
+    return hasRelated
+      ? 'Sorry, that exact PDF was not found in @hscfreepdf yet, but here are the closest related PDFs:'
+      : 'Sorry, no matching PDF was found in @hscfreepdf for that request.';
+  }
+  if (language === 'banglish') {
+    return hasRelated
+      ? 'Sorry, exact ei PDF ta @hscfreepdf channel e pawa jayni, tobe nicher related PDF gula dekhte paro:'
+      : 'Sorry, ei namer kono PDF @hscfreepdf channel e pawa jayni.';
+  }
+  return hasRelated
+    ? 'দুঃখিত, সরাসরি এই PDF টি এখনো @hscfreepdf চ্যানেলে পাওয়া যায়নি, তবে নিচের কাছাকাছি PDF গুলো দেখতে পারো:'
+    : 'দুঃখিত, এই নামে কোনো PDF এখনো @hscfreepdf চ্যানেলে পাওয়া যায়নি।';
+}
+
+/** Deduplication key for inline similar buttons so 4 identical-looking labels never stack. */
+function buttonLabelKey(resource: BotResource): string {
+  return normalizeText(resource.title).slice(0, 38);
+}
+
 const DOMAIN_GLOSSARY = `Domain context (@hscfreepdf — Bangladesh HSC, University Admission, Medical, Engineering, BCS PDF channel):
 - Subjects: Physics (পদার্থবিজ্ঞান), Chemistry (রসায়ন), Biology (জীববিজ্ঞান / উদ্ভিদবিজ্ঞান / প্রাণিবিজ্ঞান), Higher Math (উচ্চতর গণিত), ICT (তথ্য ও যোগাযোগ প্রযুক্তি), Bangla (বাংলা), English (ইংরেজি), GK (সাধারণ জ্ঞান).
 - Papers: "1st paper" = "১ম পত্র", "2nd paper" = "২য় পত্র".
 - Popular HSC textbook/marked-book authors: Hazari / হাজারী (Chemistry), Kabir / কবির (Chemistry), Guha / গুহ (Chemistry), Ishaq / ইসহাক (Physics), Tapan / Topan / তপন (Physics), Pramanik / প্রামাণিক (Physics), Gazi Azmal / গাজী আজমল (Zoology), Abul Hasan / আবুল হাসান (Botany), Ketab Uddin / কেতাব উদ্দিন (Math), SU Ahmed / এস ইউ আহমেদ (Math), Mahbubur Rahman / মাহবুবুর রহমান (ICT).
 - Common Banglish terms: "dagano boi" / "marked book" = দাগানো বই, "proshnobank" / "qb" = প্রশ্নব্যাংক / Question Bank, "test paper" = টেস্ট পেপার, "supplement" = সাপ্লিমেন্ট, "solution" = সল্যুশন, "digest" = ডাইজেস্ট, "compact" = কমপ্যাক্ট.
-- Popular coaching/publishers: Udvash (উদ্ভাস), Unmesh (উন্মেষ), ACS (এসিএস), Retina (রেটিনা), Panjeree (পাঞ্জেরী), Joykoli (জয়কলি), Aspect (আসপেক্ট), Royal (রয়েল), Medico (মেডিকো), Alal (আলাল), Zobayer (জোবায়ের), Lecture (লেকচার).`;
+- Popular coaching/publishers: Udvash (উদ্ভাস), Unmesh (উন্মেষ), ACS (এসিএস), Retina (রেটিনা), Panjeree (পাঞ্জেরী), Joykoli (জয়কলি), Aspect (আসপেক্ট), Royal (রয়েল), Medico (মেডিকো), Alal (আলাল), Zobayer (জোবায়ের), Lecture (লেকচার).
+- DISTINCT Universities / Exam Bodies (NEVER substitute one for another!): DU (ঢাবি), JnU (জবি / জগন্নাথ), JU (জাবি / জাহাঙ্গীরনগর), RU (রাবি / রাজশাহী), CU (চবি / চট্টগ্রাম), SUST (সাস্ট / শাহজালাল), HSTU (হাজী দানেশ), BUET, KUET, RUET, CUET, BUTEX, GST (গুচ্ছ), Agri Cluster (কৃষি গুচ্ছ), Medical, Dental, BCS.`;
 
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
@@ -133,45 +279,95 @@ export function fallbackLocalSearch(
   resources: BotResource[],
   maxSimilar: number,
 ): AiSearchDecision {
-  const pdfResults = searchAll(resources, { query, typeFilter: 'PDF', limit: maxSimilar + 3 });
+  const language = detectQueryLanguage(query);
+  const strictEntities = detectStrictEntities(query);
+  let missingEntity: StrictEntityDef | undefined;
+  let pool = resources;
+
+  if (strictEntities.length > 0) {
+    const entityFiltered = resources.filter((r) =>
+      strictEntities.every((entity) => resourceMatchesEntity(r, entity)),
+    );
+    if (entityFiltered.length === 0) {
+      missingEntity = strictEntities[0];
+      // For missing school classes (e.g. Class 8), don't show unrelated HSC/Admission PDFs.
+      if (missingEntity.kind === 'class') {
+        return {
+          isPdfRequest: true,
+          bestMatchId: null,
+          similarIds: [],
+          replyText: formatNotFoundReply(language, missingEntity, false),
+          usedAi: false,
+          candidatesChecked: 0,
+          expandedQueries: [query],
+        };
+      }
+      // For missing universities, fall through to find genuinely related admission/QB PDFs
+      // ONLY as similarIds (bestMatchId MUST remain null!).
+    } else {
+      pool = entityFiltered;
+    }
+  }
+
+  const pdfResults = searchAll(pool, { query, typeFilter: 'PDF', limit: maxSimilar + 8 });
   const hits =
     pdfResults.results.length > 0
       ? pdfResults.results
-      : searchAll(resources, { query, typeFilter: 'ALL', limit: maxSimilar + 3 }).results;
+      : searchAll(pool, { query, typeFilter: 'ALL', limit: maxSimilar + 8 }).results;
 
   if (hits.length === 0) {
     return {
       isPdfRequest: true,
       bestMatchId: null,
       similarIds: [],
-      replyText:
-        'এই নামে কোনো PDF চ্যানেলে খুঁজে পাওয়া যায়নি। অন্যভাবে লিখে (যেমন লেখক বা বিষয়ের নাম দিয়ে) আবার চেষ্টা করো।',
+      replyText: formatNotFoundReply(language, missingEntity, false),
       usedAi: false,
       candidatesChecked: 0,
       expandedQueries: [query],
     };
   }
 
-  const best = hits[0];
   const similarIds: string[] = [];
-  const used = new Set<string>([best.id]);
+  const usedIds = new Set<string>();
+  const usedLabels = new Set<string>();
+
+  const tryAddSimilar = (item: BotResource) => {
+    if (similarIds.length >= maxSimilar) return;
+    if (usedIds.has(item.id)) return;
+    const labelKey = buttonLabelKey(item);
+    if (labelKey && usedLabels.has(labelKey)) return;
+    usedIds.add(item.id);
+    if (labelKey) usedLabels.add(labelKey);
+    similarIds.push(item.id);
+  };
+
+  if (missingEntity) {
+    for (const hit of hits) {
+      tryAddSimilar(hit as BotResource);
+    }
+    return {
+      isPdfRequest: true,
+      bestMatchId: null,
+      similarIds,
+      replyText: formatNotFoundReply(language, missingEntity, similarIds.length > 0),
+      usedAi: false,
+      candidatesChecked: hits.length,
+      expandedQueries: [query],
+    };
+  }
+
+  const best = hits[0] as BotResource;
+  usedIds.add(best.id);
+  usedLabels.add(buttonLabelKey(best));
 
   for (const hit of hits.slice(1)) {
-    if (similarIds.length >= maxSimilar) break;
-    if (!used.has(hit.id)) {
-      used.add(hit.id);
-      similarIds.push(hit.id);
-    }
+    tryAddSimilar(hit as BotResource);
   }
 
   if (similarIds.length < maxSimilar) {
-    const pdfPool = resources.filter((r) => r.type === 'PDF');
-    for (const rel of relatedResources(best, pdfPool, maxSimilar + 2)) {
-      if (similarIds.length >= maxSimilar) break;
-      if (!used.has(rel.id)) {
-        used.add(rel.id);
-        similarIds.push(rel.id);
-      }
+    const pdfPool = pool.filter((r) => r.type === 'PDF');
+    for (const rel of relatedResources(best, pdfPool, maxSimilar + 4)) {
+      tryAddSimilar(rel as BotResource);
     }
   }
 
@@ -276,9 +472,12 @@ ${contextBlock}
 User message: "${userQuery}"
 
 Tasks:
-1. Decide if the user is looking for a study PDF / book / question bank / guide / supplement / APK / resource (isPdfRequest=true), or just greeting/chatting without requesting any resource (isPdfRequest=false).
+1. Decide if the user is looking for a study PDF / book / class / question bank / guide / supplement / APK / resource (isPdfRequest=true), or just greeting/chatting without requesting any resource (isPdfRequest=false). Note: short messages naming a class, subject, university, or book (e.g. "Class 8", "Physics", "JnU") ARE resource requests (isPdfRequest=true).
 2. If isPdfRequest=false, provide a short, friendly chatReply (1 sentence in the user's language) reminding them to search with /pdf <book name>.
-3. If isPdfRequest=true, generate 2 to 4 concise searchQueries mixing Bangla and English keywords (include author, subject, paper number, edition/year, or coaching brand if mentioned, plus 1 broader fallback query for similar books). If the user is replying to a previous search (e.g. "1st paper ta dao" or "similar aro dao"), combine with the previous context!
+3. If isPdfRequest=true, generate 2 to 4 concise searchQueries mixing Bangla and English keywords:
+   - First 2-3 queries MUST target the EXACT requested book/university/author/subject.
+   - Add 1 broader related-category query (e.g. if user asks for a university A-unit question bank, include "varsity A unit question bank" or "university question bank") so related PDFs can be suggested ONLY IF the exact one is missing.
+   - If the user is replying to a previous search (e.g. "1st paper ta dao" or "similar aro dao"), combine with the previous context.
 4. Set preferPdfOnly=true unless the user explicitly asks for an app/APK, image, notice, or result.
 5. Detect user language: "bn" (Bengali script), "banglish" (Bengali written in Latin letters), or "en" (English).`;
 
@@ -316,17 +515,27 @@ Tasks:
     plan: AiQueryPlan,
     candidates: BotResource[],
     replyContext?: ConversationContext,
-  ): Promise<{ bestMatchId: string | null; similarIds: string[]; replyText: string } | null> {
+    missingEntity?: StrictEntityDef,
+  ): Promise<{
+    matchQuality: 'exact' | 'close' | 'none';
+    bestMatchId: string | null;
+    similarIds: string[];
+    replyText: string;
+  } | null> {
     if (!this.ai) return null;
 
     const catalog = candidates.map(formatCandidateLine).join('\n');
     const contextHint = replyContext
       ? `\nThe user is replying to a previous result: "${replyContext.bestMatchTitle ?? replyContext.userQuery}".`
       : '';
+    const missingHint = missingEntity
+      ? `\nIMPORTANT VERIFIED FACT: There is NO post for "${missingEntity.labelEn}" in @hscfreepdf right now. Therefore you MUST set bestMatchId="" and matchQuality="close" (if genuinely useful related PDFs exist below) or "none" (if none are relevant). Clearly tell the user "${missingEntity.labelEn}" is not available yet, and offer the best related PDFs in similarIds!`
+      : '';
 
-    const prompt = `You are the helpful AI librarian for the @hscfreepdf Telegram group.
+    const prompt = `You are the strict, honest AI librarian for the @hscfreepdf Telegram group.
 ${DOMAIN_GLOSSARY}
 ${contextHint}
+${missingHint}
 
 User request: "${userQuery}"
 User language: ${plan.language}
@@ -334,23 +543,34 @@ User language: ${plan.language}
 Candidate posts from @hscfreepdf (ONLY pick IDs from this exact list; NEVER invent an ID):
 ${catalog}
 
-Instructions:
-1. Pick "bestMatchId": the SINGLE best matching post ID for what the user wants.
-   - Strongly prefer Type:PDF over Type:Image or Type:Text when a PDF post exists for the same book.
-   - Prefer the newest edition/year unless the user requested a specific older year.
-   - If the user asked for a specific author/paper/book and NONE of the candidates actually match it closely, set bestMatchId to "" (empty string) and put the closest helpful alternatives in similarIds instead!
-2. Pick "similarIds": up to ${this.maxSimilarButtons} genuinely useful alternative or related PDFs (prefer Type:PDF) — e.g., other authors of the same subject/paper, companion 1st/2nd paper, newer/older edition, or related question bank/supplement. Never include bestMatchId in similarIds.
-3. Write "replyText": 1-2 short, friendly sentences matching the user's language (${plan.language}).
-   - If bestMatchId is found, briefly name the book found.
-   - If bestMatchId is empty, politely say that exact PDF wasn't found in @hscfreepdf yet and point to the similar PDFs below.`;
+STRICT MATCHING RULES (FOLLOW EXACTLY):
+1. First decide "matchQuality":
+   - "exact": A candidate GENUINELY matches the user's requested book, subject, author/coaching (if specified), and university/exam/class (if specified).
+   - "close": The exact requested university, author, edition, or book is NOT in the list, BUT there are genuinely useful related PDFs in the same study/exam category (e.g. user asked for JnU or HSTU question bank and it's not available → offer Varsity 'Ka' / GST / University Master Question Banks in similarIds; or user asked for Ketab Uddin Math and SU Ahmed Math is available). Set bestMatchId="" and put up to ${this.maxSimilarButtons} DISTINCT related PDFs in similarIds!
+   - "none": The request is completely outside the channel's content (e.g. fiction novels like Harry Potter, Class 6-8 school books, non-study requests) and NO candidates are meaningfully helpful. Set bestMatchId="" and similarIds=[].
+2. NEVER FAKE AN EXACT MATCH:
+   - NEVER substitute one university for another as bestMatchId (JnU ≠ GST/SUST/Varsity Master QB; HSTU ≠ GST/SUST/Varsity Master QB).
+   - If the requested PDF is NOT directly in the list, bestMatchId MUST be "" (empty string) — NEVER put a substitute PDF into bestMatchId! Put helpful alternatives in similarIds instead!
+   - Avoid picking multiple duplicate posts of the same book in similarIds; pick distinct, varied helpful PDFs (prefer Type:PDF).
+3. When matchQuality="exact":
+   - Pick "bestMatchId": the SINGLE best matching post ID (prefer Type:PDF and newest edition/year unless an older year was requested).
+   - Pick "similarIds": up to ${this.maxSimilarButtons} genuinely useful, DISTINCT alternatives. Never include bestMatchId in similarIds.
+4. Write "replyText": 1-2 short, clear, honest sentences in the user's language (${plan.language}).
+   - If matchQuality="exact": briefly confirm the exact PDF found.
+   - If matchQuality="close": clearly say that the exact requested PDF is NOT available in @hscfreepdf yet, and invite them to check the related PDFs below.
+   - If matchQuality="none": clearly and politely say that this PDF is not available in @hscfreepdf.`;
 
     const text = await this.generateJson(
       prompt,
       {
-        temperature: 0.15,
+        temperature: 0.1,
         responseSchema: {
           type: Type.OBJECT,
           properties: {
+            matchQuality: {
+              type: Type.STRING,
+              enum: ['exact', 'close', 'none'],
+            },
             bestMatchId: { type: Type.STRING },
             similarIds: {
               type: Type.ARRAY,
@@ -358,22 +578,41 @@ Instructions:
             },
             replyText: { type: Type.STRING },
           },
-          required: ['bestMatchId', 'similarIds', 'replyText'],
+          required: ['matchQuality', 'bestMatchId', 'similarIds', 'replyText'],
         },
       },
       'Gemini Stage 2',
     );
 
     const parsed = safeParseJson<{
+      matchQuality?: 'exact' | 'close' | 'none';
       bestMatchId?: string;
       similarIds?: string[];
       replyText?: string;
     }>(text);
     if (!parsed) return null;
 
+    let matchQuality: 'exact' | 'close' | 'none' =
+      parsed.matchQuality === 'exact' || parsed.matchQuality === 'close' || parsed.matchQuality === 'none'
+        ? parsed.matchQuality
+        : parsed.bestMatchId?.trim()
+          ? 'exact'
+          : 'none';
+
+    // Hard guarantee: if the requested university/entity doesn't exist in index, NEVER allow exact/bestMatchId.
+    if (missingEntity && matchQuality === 'exact') {
+      matchQuality = 'close';
+    }
+
     return {
-      bestMatchId: parsed.bestMatchId?.trim() || null,
-      similarIds: Array.isArray(parsed.similarIds) ? parsed.similarIds.map((s) => String(s).trim()) : [],
+      matchQuality,
+      bestMatchId: !missingEntity && matchQuality === 'exact' ? parsed.bestMatchId?.trim() || null : null,
+      similarIds:
+        matchQuality === 'none'
+          ? []
+          : Array.isArray(parsed.similarIds)
+            ? parsed.similarIds.map((s) => String(s).trim())
+            : [],
       replyText: parsed.replyText?.trim() || '',
     };
   }
@@ -395,6 +634,37 @@ Instructions:
         candidatesChecked: 0,
         expandedQueries: [],
       };
+    }
+
+    // Deterministic entity check:
+    // - If a requested school class (e.g. Class 8) has 0 posts, return clean "Not Found" immediately.
+    // - If a requested university (e.g. JnU, HSTU) has 0 posts, mark missingEntity so bestMatchId is
+    //   strictly forced to null ("not found"), while still searching the full index for related PDFs!
+    // - If the requested university DOES have posts, scope candidate search to those posts first.
+    const strictEntities = detectStrictEntities(trimmed);
+    let missingEntity: StrictEntityDef | undefined;
+    let searchPool = resources;
+
+    if (strictEntities.length > 0) {
+      const entityMatches = resources.filter((r) =>
+        strictEntities.every((entity) => resourceMatchesEntity(r, entity)),
+      );
+      if (entityMatches.length === 0) {
+        missingEntity = strictEntities[0];
+        if (missingEntity.kind === 'class') {
+          return {
+            isPdfRequest: true,
+            bestMatchId: null,
+            similarIds: [],
+            replyText: formatNotFoundReply(detectQueryLanguage(trimmed), missingEntity, false),
+            usedAi: false,
+            candidatesChecked: 0,
+            expandedQueries: [trimmed],
+          };
+        }
+      } else {
+        searchPool = entityMatches;
+      }
     }
 
     if (!this.ai) {
@@ -425,16 +695,13 @@ Instructions:
         new Set([trimmed, ...plan.searchQueries.map((q) => q.trim()).filter(Boolean)]),
       ).slice(0, 5);
 
-      const candidates = collectCandidates(resources, expandedQueries, plan.preferPdfOnly, 35);
+      const candidates = collectCandidates(searchPool, expandedQueries, plan.preferPdfOnly, 35);
       if (candidates.length === 0) {
         return {
           isPdfRequest: true,
           bestMatchId: null,
           similarIds: [],
-          replyText:
-            plan.language === 'en'
-              ? 'Sorry, I could not find any matching PDF in @hscfreepdf. Try another keyword or author name.'
-              : 'দুঃখিত, এই নামে কোনো PDF @hscfreepdf চ্যানেলে পাওয়া যায়নি। অন্য কীওয়ার্ড বা লেখকের নাম দিয়ে আবার চেষ্টা করো।',
+          replyText: formatNotFoundReply(plan.language, missingEntity, false),
           usedAi: true,
           candidatesChecked: 0,
           expandedQueries,
@@ -442,37 +709,70 @@ Instructions:
       }
 
       const candidateMap = new Map(candidates.map((c) => [c.id, c]));
-      const ranked = await this.rankCandidates(trimmed, plan, candidates, replyContext);
+      const ranked = await this.rankCandidates(
+        trimmed,
+        plan,
+        candidates,
+        replyContext,
+        missingEntity,
+      );
       if (!ranked) {
         return fallbackLocalSearch(expandedQueries[0], resources, this.maxSimilarButtons);
       }
 
-      // Hallucination guard: accept ONLY IDs verified to exist in candidateMap.
-      const bestMatchId =
-        ranked.bestMatchId && candidateMap.has(ranked.bestMatchId) ? ranked.bestMatchId : null;
-
-      const validSimilar: string[] = [];
-      const seen = new Set<string>(bestMatchId ? [bestMatchId] : []);
-      for (const id of ranked.similarIds) {
-        if (validSimilar.length >= this.maxSimilarButtons) break;
-        if (!seen.has(id) && candidateMap.has(id)) {
-          seen.add(id);
-          validSimilar.push(id);
-        }
+      if (ranked.matchQuality === 'none') {
+        return {
+          isPdfRequest: true,
+          bestMatchId: null,
+          similarIds: [],
+          replyText: ranked.replyText || formatNotFoundReply(plan.language, missingEntity, false),
+          usedAi: true,
+          candidatesChecked: candidates.length,
+          expandedQueries,
+        };
       }
 
-      // Backfill similar PDFs locally if AI returned fewer than 3 alternatives.
+      // Hallucination guard: accept ONLY IDs verified to exist in candidateMap.
+      const bestMatchId =
+        !missingEntity && ranked.bestMatchId && candidateMap.has(ranked.bestMatchId)
+          ? ranked.bestMatchId
+          : null;
+
+      const validSimilar: string[] = [];
+      const seenIds = new Set<string>(bestMatchId ? [bestMatchId] : []);
+      const seenLabels = new Set<string>(
+        bestMatchId && candidateMap.has(bestMatchId)
+          ? [buttonLabelKey(candidateMap.get(bestMatchId)!)]
+          : [],
+      );
+
+      const tryAddSimilar = (item: BotResource | undefined) => {
+        if (!item || validSimilar.length >= this.maxSimilarButtons) return;
+        if (seenIds.has(item.id)) return;
+        const labelKey = buttonLabelKey(item);
+        if (labelKey && seenLabels.has(labelKey)) return;
+        seenIds.add(item.id);
+        if (labelKey) seenLabels.add(labelKey);
+        validSimilar.push(item.id);
+      };
+
+      for (const id of ranked.similarIds) {
+        tryAddSimilar(candidateMap.get(id));
+      }
+
+      // Backfill similar PDFs locally if we had an exact match and fewer than 3 alternatives,
+      // OR if a requested university was missing and AI returned 0 similarIds despite candidates existing.
       if (bestMatchId && validSimilar.length < Math.min(3, this.maxSimilarButtons)) {
         const anchor = candidateMap.get(bestMatchId);
         if (anchor) {
-          const pdfPool = resources.filter((r) => r.type === 'PDF');
-          for (const rel of relatedResources(anchor, pdfPool, this.maxSimilarButtons + 2)) {
-            if (validSimilar.length >= this.maxSimilarButtons) break;
-            if (!seen.has(rel.id)) {
-              seen.add(rel.id);
-              validSimilar.push(rel.id);
-            }
+          const pdfPool = searchPool.filter((r) => r.type === 'PDF');
+          for (const rel of relatedResources(anchor, pdfPool, this.maxSimilarButtons + 4)) {
+            tryAddSimilar(rel as BotResource);
           }
+        }
+      } else if (missingEntity && validSimilar.length === 0) {
+        for (const cand of candidates) {
+          if (cand.type === 'PDF') tryAddSimilar(cand);
         }
       }
 
@@ -484,7 +784,7 @@ Instructions:
           ranked.replyText ||
           (bestMatchId
             ? `পাওয়া গেছে: ${candidateMap.get(bestMatchId)?.title}`
-            : 'সঠিক বইটি পাওয়া যায়নি, নিচের কাছাকাছি PDF গুলো দেখতে পারো:'),
+            : formatNotFoundReply(plan.language, missingEntity, validSimilar.length > 0)),
         usedAi: true,
         candidatesChecked: candidates.length,
         expandedQueries,
